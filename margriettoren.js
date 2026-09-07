@@ -2,7 +2,7 @@
 window.TOUR = {
   "title": "Margriettoren",
   "settings": {
-    "fovMin": 60,
+    "fovMin": 30,
     "fovMax": 90,
     "yawLimited": true,
     "yawRange": 30,
@@ -20,7 +20,7 @@ window.TOUR = {
         "pitch": -2.9
       },
       "settings": {
-        "fovMin": 60,
+        "fovMin": 30,
         "fovMax": 90,
         "yawLimited": true,
         "yawRange": 30,

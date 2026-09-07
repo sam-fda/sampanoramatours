@@ -28,7 +28,7 @@
   .proj-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .proj-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:none;line-height:1;}
   .proj-toggle.switchable .proj-label{display:block;}
-  .proj-current{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw;line-height:1.1;}
+  .proj-current{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74vw;line-height:1.1;}
   .proj-toggle.switchable .proj-current::after{content:"\25BE";font-size:8px;color:var(--muted);flex:none;}
 
   .controls{position:absolute;right:18px;bottom:18px;z-index:20;display:flex;gap:8px;pointer-events:auto;}
@@ -39,10 +39,6 @@
   .btn svg{width:18px;height:18px;display:block;}
   .btn.is-active{background:var(--ink);border-color:var(--ink);color:#fff;}
   .btn[hidden]{display:none;}
-  /* Top-right controls (gyro + fullscreen): square, sized in JS to the left box height, smaller icon */
-  .top-right{margin-left:auto;align-self:flex-start;display:flex;gap:8px;pointer-events:auto;}
-  .top-ctl{flex:none;}
-  .top-ctl svg{width:15px;height:15px;}
 
   .scenes{position:absolute;left:18px;bottom:18px;z-index:20;display:flex;gap:8px;max-width:calc(100vw - 120px);overflow-x:auto;padding:4px;pointer-events:auto;scrollbar-width:thin;}
   .scenes[hidden]{display:none;}
@@ -88,14 +84,6 @@
     </button>
   </div>
   <div class="projects-menu" id="projectsMenu" hidden></div>
-  <div class="top-right">
-    <button class="btn top-ctl" id="btnGyro" title="Motion / gyroscope" aria-label="Gyroscope motion" aria-pressed="false" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9.2" ry="3.8"/><ellipse cx="12" cy="12" rx="3.8" ry="9.2"/><path d="M4.9 10.2 3 12l2.1 1.5"/><path d="M14 4.5 12 2.7 10 4.2"/></svg>
-    </button>
-    <button class="btn top-ctl" id="btnFull" title="Fullscreen (F)" aria-label="Fullscreen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-    </button>
-  </div>
 </div>
 
 <div class="scenes" id="scenes" hidden></div>
@@ -203,24 +191,9 @@
     });
   }
 
-  // Controls (guest set — no view-setting changes)
-  var btnFull=document.getElementById('btnFull');
-  btnFull.addEventListener('click',toggleFull);
-  function toggleFull(){
-    if(!document.fullscreenElement){var el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);}
-    else if(document.exitFullscreen){document.exitFullscreen();}
-  }
-  document.addEventListener('fullscreenchange',function(){btnFull.classList.toggle('is-active',!!document.fullscreenElement);});
-  // keep the top-right buttons square, matching the left logo box height
-  var barChip=document.querySelector('.bar-chip');
-  var topCtls=document.querySelectorAll('.top-ctl');
-  function sizeFull(){ var h=barChip.getBoundingClientRect().height; if(h){ for(var k=0;k<topCtls.length;k++){ topCtls[k].style.width=topCtls[k].style.height=h+'px'; } } }
-  sizeFull();
-  if(window.ResizeObserver) new ResizeObserver(sizeFull).observe(barChip);
-  window.addEventListener('resize',sizeFull);
+  // Controls (guest set — no view-setting changes). Arrow keys hop between scenes.
   document.addEventListener('keydown',function(e){
-    if(e.key==='f'||e.key==='F')toggleFull();
-    else if(e.key==='ArrowRight'&&scenes.length>1)goTo((current+1)%scenes.length);
+    if(e.key==='ArrowRight'&&scenes.length>1)goTo((current+1)%scenes.length);
     else if(e.key==='ArrowLeft'&&scenes.length>1)goTo((current-1+scenes.length)%scenes.length);
   });
 
@@ -241,65 +214,6 @@
     toggle.addEventListener('click',function(ev){ ev.stopPropagation(); var open=menu.hidden; menu.hidden=!open; toggle.setAttribute('aria-expanded',String(open)); });
     document.addEventListener('click',function(e){ if(!menu.hidden && !menu.contains(e.target) && !toggle.contains(e.target)){ menu.hidden=true; toggle.setAttribute('aria-expanded','false'); } });
   })();
-
-  // ---------- Gyroscope / device-orientation mode (phone; default stays touch) ----------
-  function _rotateEuler(euler,result){
-    var heading,bank,attitude,
-      ch=Math.cos(euler.yaw),sh=Math.sin(euler.yaw),
-      ca=Math.cos(euler.pitch),sa=Math.sin(euler.pitch),
-      cb=Math.cos(euler.roll),sb=Math.sin(euler.roll),
-      m=[sh*sb-ch*sa*cb,-ch*ca,ch*sa*sb+sh*cb, ca*cb,-sa,-ca*sb, sh*sa*cb+ch*sb,sh*ca,-sh*sa*sb+ch*cb];
-    if(m[3]>0.9999){ heading=Math.atan2(m[2],m[8]); attitude=Math.PI/2; bank=0; }
-    else if(m[3]<-0.9999){ heading=Math.atan2(m[2],m[8]); attitude=-Math.PI/2; bank=0; }
-    else { heading=Math.atan2(-m[6],m[0]); bank=Math.atan2(-m[5],m[4]); attitude=Math.asin(m[3]); }
-    result.yaw=heading; result.pitch=attitude; result.roll=bank;
-  }
-  function DeviceOrientationControlMethod(){
-    this._dynamics={ yaw:new Marzipano.Dynamics(), pitch:new Marzipano.Dynamics() };
-    this._h=this._handleData.bind(this);
-    if(window.DeviceOrientationEvent) window.addEventListener('deviceorientation', this._h);
-    this._previous={}; this._current={}; this._tmp={}; this._getPitchCallbacks=[];
-  }
-  Marzipano.dependencies.eventEmitter(DeviceOrientationControlMethod);
-  DeviceOrientationControlMethod.prototype.destroy=function(){ if(window.DeviceOrientationEvent) window.removeEventListener('deviceorientation', this._h); };
-  DeviceOrientationControlMethod.prototype.getPitch=function(cb){ this._getPitchCallbacks.push(cb); };
-  DeviceOrientationControlMethod.prototype._handleData=function(data){
-    var previous=this._previous,current=this._current,tmp=this._tmp;
-    tmp.yaw=Marzipano.util.degToRad(data.alpha); tmp.pitch=Marzipano.util.degToRad(data.beta); tmp.roll=Marzipano.util.degToRad(data.gamma);
-    _rotateEuler(tmp,current);
-    this._getPitchCallbacks.forEach(function(cb){ cb(null,current.pitch); }); this._getPitchCallbacks.length=0;
-    if(previous.yaw!=null && previous.pitch!=null && previous.roll!=null){
-      this._dynamics.yaw.offset=-(current.yaw-previous.yaw);
-      this._dynamics.pitch.offset=(current.pitch-previous.pitch);
-      this.emit('parameterDynamics','yaw',this._dynamics.yaw);
-      this.emit('parameterDynamics','pitch',this._dynamics.pitch);
-    }
-    previous.yaw=current.yaw; previous.pitch=current.pitch; previous.roll=current.roll;
-  };
-
-  var btnGyro=document.getElementById('btnGyro');
-  var _isTouch=(navigator.maxTouchPoints>0)||('ontouchstart' in window);
-  if(window.DeviceOrientationEvent && _isTouch){
-    btnGyro.hidden=false;                      // only offer it on phones/tablets
-    var doMethod=new DeviceOrientationControlMethod();
-    viewer.controls().registerMethod('deviceOrientation', doMethod);
-    var gyroOn=false;
-    var enableGyro=function(){
-      doMethod.getPitch(function(err,pitch){ if(!err && current>=0) scenes[current].view.setPitch(pitch); });
-      viewer.controls().enableMethod('deviceOrientation');
-      gyroOn=true; btnGyro.classList.add('is-active'); btnGyro.setAttribute('aria-pressed','true');
-    };
-    var disableGyro=function(){
-      viewer.controls().disableMethod('deviceOrientation');
-      gyroOn=false; btnGyro.classList.remove('is-active'); btnGyro.setAttribute('aria-pressed','false');
-    };
-    btnGyro.addEventListener('click',function(){
-      if(gyroOn){ disableGyro(); return; }
-      if(typeof DeviceOrientationEvent.requestPermission==='function'){   // iOS 13+ needs a tap-triggered prompt
-        DeviceOrientationEvent.requestPermission().then(function(res){ if(res==='granted') enableGyro(); }).catch(function(){});
-      } else { enableGyro(); }
-    });
-  }
 
   // ---------- Robust two-finger pinch-zoom (works on iOS & Android) ----------
   (function(){
