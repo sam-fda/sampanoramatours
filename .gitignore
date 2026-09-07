@@ -1,0 +1,17 @@
+# Raw Enscape exports — keep these OUT of the repo. Optimise them in admin.html
+# (they become panos/<id>.jpg) and commit only the optimised JPGs.
+panos/Enscape_*.png
+panos/Enscape_*.jpg
+*.psd
+*.tif
+*.tiff
+
+# Local backups / scratch / generated test files
+archive/
+_*.png
+_*.html
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini

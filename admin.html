@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Space &amp; Matter — Panorama Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%201080%201080%27%3E%3Cpath%20fill%3D%27%23191919%27%20d%3D%27M767.29%2C798.44c15.85-14.28%2C45.4-47.4%2C103.64-120.87l5.83-7.36-115.66-116.1-7.28%2C10.03c-.4.55-38.7%2C53.1-91.84%2C113.16l-131.42-155.03c89.4-57.27%2C173.59-123.83%2C172.41-237.37-1.31-125.69-103.74-216.92-243.58-216.92s-252.37%2C99.4-252.37%2C236.36c0%2C80.25%2C51.82%2C144.29%2C89.66%2C191.06l3.21%2C3.99c-78%2C49.39-165.84%2C130.58-165.84%2C245.74%2C0%2C149.83%2C128.94%2C267.21%2C293.55%2C267.21%2C113.9%2C0%2C179.27-56.04%2C227.01-96.95l.3-.27%2C76.49%2C88.25h214.01l-178.12-204.92h0ZM376.98%2C301.5c0-31.12%2C17.61-90%2C84.25-90%2C24.18%2C0%2C45.88%2C8.41%2C61.09%2C23.69%2C14.89%2C14.95%2C23.03%2C35.84%2C22.92%2C58.82-.19%2C41.81-35.46%2C65.82-93.91%2C105.59-5.41%2C3.68-11%2C7.49-16.78%2C11.45l-4.85-5.5c-37.29-42.2-52.73-59.67-52.73-104.05h0ZM397.42%2C612.44l159.47%2C187.36c-2.26%2C1.77-4.53%2C3.55-6.83%2C5.36-30.7%2C24.22-62.45%2C49.25-116.47%2C50.03-41.62.49-76.8-10.24-101.37-31.34-23.51-20.2-36.64-49.38-38.14-84.62%2C2.66-59.02%2C64.19-101.73%2C103.34-126.79h0Z%27%2F%3E%3C%2Fsvg%3E">
+<style>
+  :root{
+    --ink:#191919; --paper:#ffffff;
+    --line:rgba(25,25,25,.14); --line-strong:rgba(25,25,25,.30);
+    --muted:rgba(25,25,25,.55); --panel:rgba(255,255,255,.90);
+    --radius:2px;
+    --font:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{display:flex;font-family:var(--font);color:var(--ink);background:var(--paper);overflow:hidden;-webkit-tap-highlight-color:transparent;}
+  button,input{font-family:var(--font);}
+
+  /* ---------- Sidebar ---------- */
+  .side{width:360px;flex:none;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--paper);}
+  .side .inner{padding:20px 20px 40px;}
+  .head{display:flex;align-items:center;margin-bottom:6px;}
+  .logo-side{height:20px;width:auto;color:var(--ink);display:block;}
+  .head-sub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+  .sect{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .sect:first-of-type{border-top:none;padding-top:0;}
+  .sect h3{margin:0 0 12px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;}
+  label.lbl{display:block;font-size:11px;font-weight:500;color:var(--muted);margin:0 0 5px;letter-spacing:.02em;}
+  input.text{width:100%;padding:9px 10px;border:1px solid var(--line-strong);border-radius:var(--radius);font-size:13px;color:var(--ink);background:#fff;outline:none;}
+  input.text:focus{border-color:var(--ink);}
+  textarea.text{width:100%;padding:9px 10px;border:1px solid var(--line-strong);border-radius:var(--radius);font-size:12.5px;color:var(--ink);background:#fff;outline:none;resize:vertical;min-height:74px;font-family:var(--font);line-height:1.6;}
+  textarea.text:focus{border-color:var(--ink);}
+  .hint{font-size:11px;color:var(--muted);line-height:1.55;margin:8px 0 0;}
+
+  /* scene cards */
+  .scene-card{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;background:#fff;transition:border-color .15s ease;}
+  .scene-card.sel{border-color:var(--ink);}
+  .scene-card .th{width:60px;height:38px;flex:none;border-radius:2px;background:#222 center/cover;filter:grayscale(1);cursor:pointer;}
+  .scene-card.sel .th{filter:none;}
+  .scene-card .meta{flex:1;min-width:0;}
+  .scene-card .meta input{width:100%;border:none;font-size:12.5px;font-weight:500;padding:2px 0;color:var(--ink);background:transparent;outline:none;border-bottom:1px solid transparent;}
+  .scene-card .meta input:focus{border-bottom:1px solid var(--line-strong);}
+  .scene-card .meta .fr{font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:2px;font-variant-numeric:tabular-nums;}
+  .mini{display:flex;gap:3px;}
+  .mini button{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:2px;cursor:pointer;color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;}
+  .mini button:hover{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .drop{margin-top:4px;border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:16px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;}
+  .drop:hover,.drop.over{border-color:var(--ink);background:rgba(25,25,25,.03);color:var(--ink);}
+
+  .field{margin-bottom:14px;}
+  .field .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .field .row label{font-size:12px;font-weight:500;}
+  .field .val{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .field.disabled{opacity:.4;pointer-events:none;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;margin:9px 0 2px;background:var(--line-strong);border-radius:2px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ink);cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px var(--line-strong);}
+  .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:500;}
+  .switch input{position:absolute;opacity:0;}
+  .switch .track{width:34px;height:18px;border-radius:9px;background:var(--line-strong);position:relative;transition:background .15s;}
+  .switch .track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s;}
+  .switch input:checked + .track{background:var(--ink);}
+  .switch input:checked + .track::after{transform:translateX(16px);}
+  .twin{display:flex;gap:12px;} .twin .field{flex:1;margin-bottom:0;}
+
+  .btn-primary{display:block;width:100%;padding:11px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;margin-top:10px;transition:opacity .15s;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-ghost{display:block;width:100%;padding:10px;background:transparent;color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--radius);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;margin-top:10px;transition:background .15s,color .15s;}
+  .btn-ghost:hover{background:var(--ink);color:#fff;border-color:var(--ink);}
+  select.text{width:100%;padding:9px 10px;border:1px solid var(--line-strong);border-radius:var(--radius);font-size:13px;background:#fff;color:var(--ink);}
+
+  /* ---------- Preview ---------- */
+  .main{flex:1;position:relative;background:#0d0d0d;min-width:0;}
+  #pano{position:absolute;inset:0;touch-action:none;}
+  #pano canvas{touch-action:none;}
+  /* Phone-preview: constrain the preview to a portrait phone shape */
+  .main.phone{background:#0d0d0d;}
+  .main.phone #pano{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);height:94%;aspect-ratio:390/844;width:auto;max-width:94%;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.15),0 14px 50px rgba(0,0,0,.5);}
+  .phone-toggle{position:absolute;right:16px;top:16px;z-index:12;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.5);padding:7px 12px;border-radius:var(--radius);user-select:none;}
+  .phone-toggle input{position:absolute;opacity:0;pointer-events:none;}
+  .phone-toggle .track{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,.35);position:relative;transition:background .15s;}
+  .phone-toggle .track::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .15s;}
+  .phone-toggle input:checked + .track{background:#fff;}
+  .phone-toggle input:checked + .track::after{background:var(--ink);transform:translateX(14px);}
+  .pv-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);background:var(--paper);text-align:center;padding:32px;}
+  .pv-empty[hidden]{display:none;}
+  .pv-empty .logo-lg{height:26px;width:auto;color:var(--ink);}
+  .readout{position:absolute;left:16px;top:16px;z-index:10;font-size:11px;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.5);padding:7px 12px;border-radius:var(--radius);font-variant-numeric:tabular-nums;}
+  .setfront{position:absolute;left:16px;top:52px;z-index:10;}
+  .setfront button{padding:9px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;color:var(--ink);}
+  .setfront button:hover{background:#fff;border-color:var(--ink);}
+  .setfront[hidden]{display:none;}
+  .locknote{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;font-size:10.5px;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.4);padding:6px 11px;border-radius:var(--radius);white-space:nowrap;}
+
+  /* QR modal */
+  .modal{position:fixed;inset:0;z-index:100;background:rgba(25,25,25,.45);display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal.open{display:flex;}
+  .modal .box{background:#fff;border-radius:var(--radius);max-width:640px;width:100%;max-height:86vh;overflow-y:auto;padding:24px;}
+  .modal h2{margin:0 0 4px;font-size:14px;font-weight:600;letter-spacing:.02em;}
+  .modal .sub{margin:0 0 18px;font-size:12px;color:var(--muted);line-height:1.5;}
+  .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
+  .qr-item{text-align:center;border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .qr-item img{width:100%;height:auto;image-rendering:pixelated;}
+  .qr-item .nm{font-size:12px;font-weight:600;margin:8px 0 2px;}
+  .qr-item .u{font-size:9.5px;color:var(--muted);word-break:break-all;line-height:1.4;}
+  .qr-item a{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);cursor:pointer;}
+  .modal .close{float:right;cursor:pointer;border:none;background:none;font-size:20px;line-height:1;color:var(--muted);}
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+
+<!-- Space & Matter logotype (official) -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><symbol id="sm-logo" viewBox="0 0 1280 200"><g fill="currentColor"><path d="M63.21,155.48c-33.73,0-46.76-16.97-47.8-34.14l27.11-2.9c1.24,11.17,7.86,16.97,20.69,16.97s16.97-6.41,16.97-12.62-4.76-9.31-13.24-10.76l-16.35-2.69c-14.9-2.48-31.45-10.76-31.45-31.04,0-15.73,13.04-32.48,42.21-32.48,31.24,0,41.59,16.97,43.86,32.28l-24.83,2.9c-1.86-8.48-6.83-15.31-19.66-15.31s-15.93,6.21-15.93,10.55c0,6.41,4.55,9.1,12.41,10.55l17.79,3.1c20.07,3.52,32.28,13.04,32.28,30.83s-13.66,34.76-44.07,34.76Z"/><path d="M226.26,99.82c0,32.07-17.79,55.66-46.97,55.66-13.86,0-24.21-5.38-31.45-14.48v50.28h-27.11V48.3h25.86v14.28c7.04-10.35,18-16.76,32.69-16.76,28.97,0,46.97,21.52,46.97,54ZM147.42,100.65c0,18.21,9.72,32.07,26.07,32.07s24.83-13.66,24.83-32.07-8.69-32.28-24.83-32.28-26.07,13.24-26.07,32.28Z"/><path d="M324.75,152.99c-7.24,0-19.04-2.07-22.35-12.83-6.83,9.72-17.59,15.31-31.86,15.31-24.42,0-36.62-15.1-36.62-30.83,0-19.66,13.45-29.38,31.66-32.48l28.14-4.76c4.76-.83,6-3.52,6-6.83,0-4.76-3.1-14.07-17.38-14.07-15.1,0-19.04,9.31-20.28,15.52l-25.45-2.69c2.28-15.73,16.35-33.52,46.76-33.52s42.83,18.62,42.83,38.48v38.69c0,4.97,1.66,7.66,7.45,7.66h4.14v22.35h-13.04ZM275.92,134.78c13.66,0,24.21-10.35,24.21-25.45v-4.76l-25.86,4.14c-10.35,1.66-13.86,7.04-13.86,13.45,0,7.66,4.97,12.62,15.52,12.62Z"/><path d="M416.2,113.06l25.86,3.31c-4.14,24.42-22.14,39.11-48.62,39.11-33.31,0-51.73-23.17-51.73-54.62s18.83-55.04,51.93-55.04c27.52,0,45.31,14.48,49.04,40.14l-26.48,2.9c-2.28-12.62-8.9-20.48-22.55-20.48-17.17,0-24.21,14.07-24.21,32.48s7.24,32.07,24.42,32.07c13.24,0,20.48-7.86,22.35-19.86Z"/><path d="M523.38,118.65l23.59,5.59c-6,22.14-24.42,31.24-45.52,31.24-34.14,0-52.76-20.69-52.76-54.83,0-31.86,20.28-54.83,52.14-54.83,29.59,0,49.04,20.48,49.04,52.35v9.72h-74.49c1.86,17.38,10.55,26.28,26.07,26.28,13.86,0,19.04-7.24,21.93-15.52ZM475.79,89.89h46.76c-1.45-16.14-9.72-22.97-22.14-22.97-13.45,0-22.14,7.45-24.62,22.97Z"/><path d="M750.01,152.99v-63.31c0-13.66-6.62-21.1-18-21.1-13.24,0-20.48,8.9-20.48,25.45v58.97h-27.11V48.3h25.86v11.59c6-8.69,15.72-14.07,29.38-14.07,15.93,0,26.28,6.83,32.07,17.17,6-10.35,16.35-17.17,32.28-17.17,26.48,0,38.49,17.79,38.49,39.52v67.66h-27.11v-63.31c0-13.66-6.62-21.1-17.79-21.1-13.24,0-20.48,8.9-20.48,25.45v58.97h-27.1Z"/><path d="M945.95,152.99c-7.24,0-19.04-2.07-22.35-12.83-6.83,9.72-17.59,15.31-31.86,15.31-24.42,0-36.62-15.1-36.62-30.83,0-19.66,13.45-29.38,31.66-32.48l28.14-4.76c4.76-.83,6-3.52,6-6.83,0-4.76-3.1-14.07-17.38-14.07-15.1,0-19.04,9.31-20.28,15.52l-25.45-2.69c2.28-15.73,16.35-33.52,46.76-33.52s42.83,18.62,42.83,38.48v38.69c0,4.97,1.66,7.66,7.45,7.66h4.14v22.35h-13.04ZM897.12,134.78c13.66,0,24.21-10.35,24.21-25.45v-4.76l-25.86,4.14c-10.35,1.66-13.86,7.04-13.86,13.45,0,7.66,4.97,12.62,15.52,12.62Z"/><path d="M1072.79,130.44c-8.07,0-10.14-4.14-10.14-11.17v-49.24h22.55v-21.73h-22.55V16.23h-27.11v32.07h-34.55V16.23h-27.11v32.07h-16.35v21.73h16.35v53.18c0,18.83,8.69,29.79,31.66,29.79h20.28v-22.55h-14.69c-8.07,0-10.14-4.14-10.14-11.17v-49.24h34.55v53.18c0,18.83,8.69,29.79,31.66,29.79h20.28v-22.55h-14.69Z"/><path d="M1165.48,118.65l23.59,5.59c-6,22.14-24.42,31.24-45.52,31.24-34.14,0-52.76-20.69-52.76-54.83,0-31.86,20.28-54.83,52.14-54.83,29.59,0,49.04,20.48,49.04,52.35v9.72h-74.49c1.86,17.38,10.55,26.28,26.07,26.28,13.86,0,19.04-7.24,21.93-15.52ZM1117.89,89.89h46.76c-1.45-16.14-9.72-22.97-22.14-22.97-13.45,0-22.14,7.45-24.62,22.97Z"/><path d="M1231.27,48.3v16.14c6.21-10.35,15.52-16.14,27.73-16.14h8.9v24.83h-9.93c-15.93,0-25.45,10.97-25.45,34.97v44.9h-27.11V48.3h25.86Z"/><path d="M653.03,121.95c2.4-2.16,6.88-7.18,15.7-18.32l.88-1.11-17.52-17.59-1.1,1.52c-.06.08-5.86,8.05-13.92,17.15l-19.91-23.49c13.55-8.68,26.3-18.76,26.12-35.97-.2-19.05-15.72-32.87-36.91-32.87s-38.24,15.06-38.24,35.81c0,12.16,7.85,21.86,13.59,28.95l.49.6c-11.82,7.48-25.13,19.79-25.13,37.24,0,22.7,19.54,40.49,44.48,40.49,17.26,0,27.16-8.49,34.4-14.69l.05-.04,11.59,13.37h32.43l-26.99-31.05ZM593.88,46.65c0-4.72,2.67-13.64,12.77-13.64,3.66,0,6.95,1.28,9.26,3.59,2.26,2.27,3.49,5.43,3.47,8.91-.03,6.33-5.37,9.97-14.23,16-.82.56-1.67,1.14-2.54,1.73l-.73-.83c-5.65-6.39-7.99-9.04-7.99-15.77ZM596.98,93.77l24.16,28.39c-.34.27-.69.54-1.03.81-4.65,3.67-9.46,7.46-17.65,7.58-6.31.08-11.64-1.55-15.36-4.75-3.56-3.06-5.55-7.48-5.78-12.82.4-8.94,9.73-15.41,15.66-19.21Z"/></g></symbol></svg>
+
+<aside class="side">
+ <div class="inner">
+  <div class="head">
+    <svg class="logo-side" viewBox="0 0 1280 200" role="img" aria-label="Space & Matter"><use href="#sm-logo"/></svg>
+  </div>
+  <div class="head-sub">Panorama Studio · Admin</div>
+
+  <div class="sect">
+    <label class="lbl">Project name</label>
+    <input class="text" id="projTitle" placeholder="e.g. Vlinderhaven — Tower" value="">
+  </div>
+
+  <div class="sect">
+    <h3>Panoramas</h3>
+    <div id="sceneList"></div>
+    <div class="drop" id="drop">Drop Enscape exports here — or click to browse</div>
+    <p class="hint">Each panorama becomes a scene. Guests can move between them from the bottom slider. Aim a scene, then press <strong>Set front</strong> to fix its opening direction.</p>
+  </div>
+
+  <div class="sect">
+    <h3>View limits <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">· selected scene</span></h3>
+    <p class="hint" style="margin:0 0 12px">Each panorama keeps its own limits. Pick a scene above, adjust below, and it saves to that scene.</p>
+    <div class="field"><div class="row"><label>Zoom in limit</label><span class="val" id="vFovMin">40°</span></div><input type="range" id="fovMin" min="5" max="90" value="40"></div>
+    <div class="field"><div class="row"><label>Zoom out limit</label><span class="val" id="vFovMax">100°</span></div><input type="range" id="fovMax" min="40" max="120" value="100"></div>
+    <div class="field">
+      <label class="switch"><input type="checkbox" id="chkYaw"><span class="track"></span> Limit horizontal pan</label>
+      <div id="yawInner" class="disabled" style="margin-top:10px"><div class="row"><label>Arc width</label><span class="val" id="vYaw">200°</span></div><input type="range" id="yawRange" min="30" max="360" step="5" value="200"></div>
+    </div>
+    <div class="field">
+      <label class="switch"><input type="checkbox" id="chkPitch"><span class="track"></span> Limit vertical pan</label>
+      <div id="pitchInner" class="disabled" style="margin-top:10px"><div class="twin">
+        <div class="field"><div class="row"><label>Up</label><span class="val" id="vUp">55°</span></div><input type="range" id="pitchUp" min="0" max="90" value="55"></div>
+        <div class="field"><div class="row"><label>Down</label><span class="val" id="vDown">35°</span></div><input type="range" id="pitchDown" min="0" max="90" value="35"></div>
+      </div></div>
+    </div>
+    <button class="btn-ghost" id="btnApplyAll" style="margin-top:6px">Apply these limits to all scenes</button>
+  </div>
+
+  <div class="sect">
+    <h3>Optimise for web</h3>
+    <label class="lbl">Max width (mobile-safe ≤ 4096)</label>
+    <select class="text" id="optW">
+      <option value="4096">4096 px — safe on all phones (recommended)</option>
+      <option value="8192">8192 px — sharper, newer devices</option>
+      <option value="2048">2048 px — lightest</option>
+    </select>
+    <button class="btn-ghost" id="btnOpt">Download optimised JPGs</button>
+    <p class="hint">Your 16384&times;8192 PNG is ~88&nbsp;MB and won't render on many phones. This exports lighter JPG copies and points the tour at them. Put the downloaded files in <code>panos/</code>.</p>
+  </div>
+
+  <div class="sect">
+    <h3>Publish</h3>
+    <label class="lbl">Tour ID <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— filename &amp; link; blank = single tour</span></label>
+    <input class="text" id="tourId" placeholder="e.g. margriettoren (leave blank for config.js)">
+    <label class="lbl" style="margin-top:12px">Hosted base URL</label>
+    <input class="text" id="baseUrl" placeholder="https://spaceandmatter.nl/tours/">
+    <button class="btn-primary" id="btnConfig">Download config file</button>
+    <button class="btn-ghost" id="btnQR">Generate QR codes</button>
+    <p class="hint">Many tours can share one folder: give each a <strong>Tour ID</strong> (→ <code>&lt;id&gt;.js</code>), upload them all next to <code>viewer.html</code>, and each QR opens its own via <code>?tour=&lt;id&gt;</code>. Blank ID = the default <code>config.js</code>.</p>
+  </div>
+
+  <div class="sect">
+    <h3>Projects menu <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— optional</span></h3>
+    <p class="hint">Adds a menu so guests can switch between projects. List <strong>every</strong> tour, one per line as <code>id | Name</code>, then upload <code>tours.js</code> to the folder alongside the tours.</p>
+    <textarea class="text" id="toursList" rows="4" placeholder="margriettoren | Margriettoren&#10;zeist | Zeist"></textarea>
+    <button class="btn-ghost" id="btnTours">Download projects menu (tours.js)</button>
+  </div>
+ </div>
+</aside>
+
+<main class="main">
+  <div id="pano"></div>
+  <label class="phone-toggle" title="Preview in a portrait phone shape — what QR guests actually see"><input type="checkbox" id="chkPhone"><span class="track"></span> Phone preview</label>
+  <div class="readout" id="readout">Facing 0° · Tilt 0° · FOV 75°</div>
+  <div class="setfront" id="setfrontWrap" hidden><button id="btnSetFront">Set front to current view</button></div>
+  <div class="locknote">Preview reflects the guest's locked limits</div>
+  <div class="pv-empty" id="pvEmpty"><svg class="logo-lg" viewBox="0 0 1280 200" role="img" aria-label="Space & Matter"><use href="#sm-logo"/></svg><div>Add a panorama to begin</div></div>
+</main>
+
+<div class="modal" id="qrModal"><div class="box">
+  <button class="close" id="qrClose">&times;</button>
+  <h2>QR codes</h2>
+  <p class="sub" id="qrSub"></p>
+  <div class="qr-grid" id="qrGrid"></div>
+</div></div>
+
+<input type="file" id="fileInput" accept="image/*" multiple>
+
+<script src="marzipano.js"></script>
+<script src="qrcode.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DEG=Math.PI/180, deg=function(d){return d*DEG;}, toDeg=function(r){return r/DEG;},
+      clamp=function(v,a,b){return Math.max(a,Math.min(b,v));};
+
+  var DEFAULT_SETTINGS={fovMin:40,fovMax:100,yawLimited:false,yawRange:200,pitchLimited:false,pitchUp:55,pitchDown:35};
+  function cloneSettings(s){ return JSON.parse(JSON.stringify(s||DEFAULT_SETTINGS)); }
+  var scenes=[], current=-1, uid=0;   // each scene carries its own .settings
+
+  var panoEl=document.getElementById('pano');
+  var viewer=new Marzipano.Viewer(panoEl,{controls:{mouseViewMode:'drag'}});
+  try{ viewer.controls().disableMethod('pinch'); }catch(e){}   // use our own pinch (below)
+  var pvEmpty=document.getElementById('pvEmpty'), setfrontWrap=document.getElementById('setfrontWrap');
+
+  // Robust two-finger pinch-zoom (matches the guest viewer)
+  (function(){
+    var startDist=0, startFov=0;
+    function twoDist(t){ var dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+    panoEl.addEventListener('touchstart',function(e){ if(e.touches.length===2 && current>=0){ startDist=twoDist(e.touches); startFov=scenes[current].view.fov(); } },{passive:false});
+    panoEl.addEventListener('touchmove',function(e){ if(e.touches.length===2 && startDist>0 && current>=0){ var d=twoDist(e.touches); if(d>0) scenes[current].view.setFov(startFov*startDist/d); e.preventDefault(); } },{passive:false});
+    function end(e){ if(!e.touches || e.touches.length<2) startDist=0; }
+    panoEl.addEventListener('touchend',end); panoEl.addEventListener('touchcancel',end);
+    ['gesturestart','gesturechange','gestureend'].forEach(function(ev){ document.addEventListener(ev,function(e){e.preventDefault();},{passive:false}); });
+  })();
+
+  function makeLimiter(S,w,yawCenter){
+    var L=Marzipano.RectilinearView.limit, p=[L.vfov(deg(S.fovMin),deg(S.fovMax)),L.hfov(deg(1),deg(150))];
+    // (no resolution cap — the Zoom-in limit fully controls how far you can zoom)
+    if(S.yawLimited){var h=deg(S.yawRange)/2;p.push(L.yaw(yawCenter-h,yawCenter+h));} else p.push(L.pitch(-Math.PI/2,Math.PI/2));
+    if(S.pitchLimited)p.push(L.pitch(-deg(S.pitchUp),deg(S.pitchDown)));
+    else if(S.yawLimited)p.push(L.pitch(-Math.PI/2,Math.PI/2));
+    return Marzipano.util.compose.apply(null,p);
+  }
+  function startFov(S){return deg(clamp(75,S.fovMin,S.fovMax));}
+  function slug(s){return (s||'scene').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'scene';}
+
+  function addFiles(list){
+    var imgs=Array.prototype.filter.call(list,function(f){return /^image\//.test(f.type);});
+    imgs.forEach(function(f){
+      var objUrl=URL.createObjectURL(f), img=new Image();
+      img.onload=function(){
+        var w=img.naturalWidth||4096;
+        var name=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()||('Scene '+(scenes.length+1));
+        var id=slug(name); var n=1, base=id; while(scenes.some(function(s){return s.id===id;})){id=base+'-'+(++n);}
+        var front={yaw:0,pitch:0};
+        var st=cloneSettings(current>=0?scenes[current].settings:DEFAULT_SETTINGS); // new scene inherits current scene's limits
+        var view=new Marzipano.RectilinearView({yaw:0,pitch:0,fov:startFov(st)},makeLimiter(st,w,0));
+        var marzScene=viewer.createScene({source:Marzipano.ImageUrlSource.fromString(objUrl),
+          geometry:new Marzipano.EquirectGeometry([{width:w}]),view:view,pinFirstLevel:true});
+        scenes.push({uid:uid++,id:id,name:name,originalName:f.name,file:'panos/'+f.name,objUrl:objUrl,img:img,w:w,front:front,settings:st,view:view,marzScene:marzScene});
+        renderList(); if(current<0) select(scenes.length-1);
+      };
+      img.src=objUrl;
+    });
+  }
+
+  function select(i){
+    if(i<0||i>=scenes.length)return; current=i;
+    scenes[i].marzScene.switchTo({transitionDuration:400});
+    pvEmpty.hidden=true; setfrontWrap.hidden=false; syncUIFromSettings(scenes[i].settings); renderList();
+  }
+
+  function applyScene(s){ if(!s)return; s.view.setLimiter(makeLimiter(s.settings,s.w,deg(s.front.yaw))); s.view.setParameters(s.view.parameters()); }
+
+  function renderList(){
+    var host=document.getElementById('sceneList'); host.innerHTML='';
+    scenes.forEach(function(s,i){
+      var card=document.createElement('div'); card.className='scene-card'+(i===current?' sel':'');
+      card.innerHTML=
+        '<div class="th" style="background-image:url('+s.objUrl+')"></div>'+
+        '<div class="meta"><input value="'+s.name.replace(/"/g,'&quot;')+'"><div class="fr">front '+Math.round(s.front.yaw)+'° · tilt '+Math.round(-s.front.pitch)+'°</div></div>'+
+        '<div class="mini"><button data-a="up" title="Move up">↑</button><button data-a="down" title="Move down">↓</button><button data-a="del" title="Remove">✕</button></div>';
+      card.querySelector('.th').addEventListener('click',function(){select(i);});
+      var inp=card.querySelector('input');
+      inp.addEventListener('input',function(){ s.name=inp.value; });
+      inp.addEventListener('blur',function(){ s.id=uniqueId(slug(s.name),s); renderList(); });
+      card.querySelector('[data-a=up]').addEventListener('click',function(){move(i,-1);});
+      card.querySelector('[data-a=down]').addEventListener('click',function(){move(i,1);});
+      card.querySelector('[data-a=del]').addEventListener('click',function(){remove(i);});
+      host.appendChild(card);
+    });
+  }
+  function uniqueId(id,self){var n=1,base=id;while(scenes.some(function(s){return s.id===id&&s!==self;})){id=base+'-'+(++n);}return id;}
+  function move(i,d){var j=i+d;if(j<0||j>=scenes.length)return;var t=scenes[i];scenes[i]=scenes[j];scenes[j]=t;
+    if(current===i)current=j;else if(current===j)current=i;renderList();}
+  function remove(i){scenes.splice(i,1);if(current>=scenes.length)current=scenes.length-1;
+    if(!scenes.length){current=-1;pvEmpty.hidden=false;setfrontWrap.hidden=true;} else if(current<0)current=0;
+    if(current>=0)scenes[current].marzScene.switchTo();renderList();}
+
+  document.getElementById('btnSetFront').addEventListener('click',function(){
+    if(current<0)return; var v=scenes[current].view;
+    scenes[current].front={yaw:Math.round(toDeg(v.yaw())*10)/10, pitch:Math.round(toDeg(v.pitch())*10)/10};
+    applyScene(scenes[current]); renderList();
+  });
+
+  // ---- settings UI (per selected scene) ----
+  var el=function(id){return document.getElementById(id);};
+  function labels(S){
+    el('vFovMin').textContent=S.fovMin+'°'; el('vFovMax').textContent=S.fovMax+'°';
+    el('vYaw').textContent=S.yawRange+'°'; el('vUp').textContent=S.pitchUp+'°'; el('vDown').textContent=S.pitchDown+'°';
+    el('yawInner').classList.toggle('disabled',!S.yawLimited);
+    el('pitchInner').classList.toggle('disabled',!S.pitchLimited);
+  }
+  function syncUIFromSettings(S){
+    el('fovMin').value=S.fovMin; el('fovMax').value=S.fovMax;
+    el('chkYaw').checked=S.yawLimited; el('yawRange').value=S.yawRange;
+    el('chkPitch').checked=S.pitchLimited; el('pitchUp').value=S.pitchUp; el('pitchDown').value=S.pitchDown;
+    labels(S);
+  }
+  function readUI(){
+    if(current<0) return;                       // no scene selected → nothing to edit
+    var S=scenes[current].settings;
+    S.fovMin=+el('fovMin').value;
+    S.fovMax=Math.max(+el('fovMax').value,S.fovMin+5); el('fovMax').value=S.fovMax;
+    S.yawLimited=el('chkYaw').checked; S.yawRange=+el('yawRange').value;
+    S.pitchLimited=el('chkPitch').checked; S.pitchUp=+el('pitchUp').value; S.pitchDown=+el('pitchDown').value;
+    labels(S);
+    applyScene(scenes[current]);
+  }
+  ['fovMin','fovMax','yawRange','pitchUp','pitchDown'].forEach(function(id){el(id).addEventListener('input',readUI);});
+  ['chkYaw','chkPitch'].forEach(function(id){el(id).addEventListener('change',readUI);});
+
+  // Copy the selected scene's limits to every scene
+  var btnApplyAll=el('btnApplyAll');
+  if(btnApplyAll) btnApplyAll.addEventListener('click',function(){
+    if(current<0){alert('Select a scene first.');return;}
+    var S=scenes[current].settings;
+    scenes.forEach(function(s){ s.settings=cloneSettings(S); applyScene(s); });
+    alert('Applied these limits to all '+scenes.length+' scene(s).');
+  });
+
+  // live readout
+  var readout=el('readout');
+  (function tick(){ if(current>=0){var v=scenes[current].view;
+    readout.textContent='Facing '+Math.round(toDeg(v.yaw()))+'° · Tilt '+Math.round(-toDeg(v.pitch()))+'° · FOV '+Math.round(toDeg(v.fov()))+'°';}
+    requestAnimationFrame(tick);})();
+
+  // ---- drop / browse ----
+  var drop=el('drop'), fileInput=el('fileInput');
+  drop.addEventListener('click',function(){fileInput.click();});
+  fileInput.addEventListener('change',function(){addFiles(this.files);this.value='';});
+  ['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over');});});
+  drop.addEventListener('drop',function(e){e.stopPropagation();if(e.dataTransfer)addFiles(e.dataTransfer.files);});
+  window.addEventListener('dragover',function(e){e.preventDefault();});
+  window.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer&&e.dataTransfer.files.length&&current<0)addFiles(e.dataTransfer.files);});
+
+  // Phone-preview toggle: constrain the preview to a portrait phone shape, so the framing
+  // you set matches what a QR guest sees in portrait. Marzipano recomputes on updateSize().
+  el('chkPhone').addEventListener('change',function(){
+    document.querySelector('.main').classList.toggle('phone', this.checked);
+    requestAnimationFrame(function(){ viewer.updateSize(); });
+  });
+
+  // ---- exporters ----
+  function download(name,blobOrUrl){
+    var a=document.createElement('a'); a.download=name;
+    a.href=(typeof blobOrUrl==='string')?blobOrUrl:URL.createObjectURL(blobOrUrl);
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  function buildConfig(){
+    var def = scenes.length ? scenes[0].settings : DEFAULT_SETTINGS;   // tour-level fallback
+    return {
+      title: el('projTitle').value||'Untitled tour',
+      settings: cloneSettings(def),
+      scenes: scenes.map(function(s){return {id:s.id,name:s.name,file:s.file,
+        front:{yaw:s.front.yaw,pitch:s.front.pitch}, settings:cloneSettings(s.settings)};})
+    };
+  }
+  function tourSlug(){ var v=(el('tourId').value||'').trim(); return v ? slug(v) : ''; }
+
+  el('btnConfig').addEventListener('click',function(){
+    if(!scenes.length){alert('Add at least one panorama first.');return;}
+    var cfg=buildConfig();
+    var js='/* Space & Matter tour — generated by admin.html */\nwindow.TOUR = '+JSON.stringify(cfg,null,2)+';\n';
+    var t=tourSlug(); var fn = t ? t+'.js' : 'config.js';
+    download(fn,new Blob([js],{type:'text/javascript'}));
+  });
+
+  function tourUrl(id){
+    var b=el('baseUrl').value.trim(); if(b&&!/\/$/.test(b))b+='/';
+    var t=tourSlug();
+    return (b||'')+'viewer.html?'+(t?'tour='+encodeURIComponent(t)+'&':'')+'start='+encodeURIComponent(id);
+  }
+  function qrDataUrl(text,scale){
+    var qr=qrcode(0,'M'); qr.addData(text); qr.make();
+    var n=qr.getModuleCount(), m=4, size=(n+m*2)*scale;
+    var c=document.createElement('canvas'); c.width=c.height=size; var ctx=c.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size); ctx.fillStyle='#191919';
+    for(var r=0;r<n;r++)for(var col=0;col<n;col++)if(qr.isDark(r,col))ctx.fillRect((col+m)*scale,(r+m)*scale,scale,scale);
+    return c.toDataURL('image/png');
+  }
+  el('btnQR').addEventListener('click',function(){
+    if(!scenes.length){alert('Add at least one panorama first.');return;}
+    if(!el('baseUrl').value.trim()){ if(!confirm('No hosted base URL set — QR codes will use a relative link. Continue?'))return; }
+    var grid=el('qrGrid'); grid.innerHTML='';
+    el('qrSub').textContent='One QR per panorama — each opens the tour at that scene. Right-click / long-press to save, or use Download.';
+    scenes.forEach(function(s){
+      var url=tourUrl(s.id), data=qrDataUrl(url,6);
+      var item=document.createElement('div'); item.className='qr-item';
+      item.innerHTML='<img src="'+data+'"><div class="nm">'+s.name+'</div><div class="u">'+url+'</div>';
+      var a=document.createElement('a'); a.textContent='Download PNG';
+      a.addEventListener('click',function(){download('qr-'+s.id+'.png',data);});
+      item.appendChild(a); grid.appendChild(item);
+    });
+    el('qrModal').classList.add('open');
+  });
+  el('qrClose').addEventListener('click',function(){el('qrModal').classList.remove('open');});
+  el('qrModal').addEventListener('click',function(e){if(e.target===el('qrModal'))el('qrModal').classList.remove('open');});
+
+  // ---- optimise / downscale ----
+  el('btnOpt').addEventListener('click',function(){
+    if(!scenes.length){alert('Add at least one panorama first.');return;}
+    var maxW=+el('optW').value;
+    scenes.forEach(function(s){
+      var w=Math.min(maxW,s.w), h=Math.round(w/2);
+      var c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(s.img,0,0,w,h);
+      c.toBlob(function(b){ download(s.id+'.jpg',b); }, 'image/jpeg', 0.85);
+      s.file='panos/'+s.id+'.jpg';   // point the tour at the optimised copy
+    });
+    renderList();
+    setTimeout(function(){alert('Optimised JPGs downloaded. The tour now points at panos/<id>.jpg — put the downloaded files there and re-export config.js.');},300);
+  });
+
+  // ---- projects menu (tours.js) ----
+  el('btnTours').addEventListener('click',function(){
+    var lines=(el('toursList').value||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    if(!lines.length){ alert('List your tours, one per line as:  id | Name'); return; }
+    var arr=lines.map(function(l){ var i=l.indexOf('|');
+      return i>=0 ? {id:slug(l.slice(0,i)), name:l.slice(i+1).trim()} : {id:slug(l), name:l}; });
+    var js='/* Space & Matter — projects menu */\nwindow.TOURS = '+JSON.stringify(arr,null,2)+';\n';
+    download('tours.js', new Blob([js],{type:'text/javascript'}));
+  });
+
+  syncUIFromSettings(DEFAULT_SETTINGS);
+})();
+</script>
+</body>
+</html>
