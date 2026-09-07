@@ -210,7 +210,8 @@
       var a=document.createElement('a');
       a.className='proj-item'+(t.id===_t?' current':'');
       a.textContent=t.name||t.id;
-      a.href='viewer.html?tour='+encodeURIComponent(t.id);
+      if(t.url){ a.href=t.url; a.target='_top'; }   // go to the project's own page (breaks out of the iframe)
+      else { a.href='viewer.html?tour='+encodeURIComponent(t.id); }  // fallback: swap the tour within this frame
       menu.appendChild(a);
     });
     // Align the menu's left edge under the project name (the toggle), not the logo.
