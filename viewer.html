@@ -18,17 +18,17 @@
   #pano{position:absolute;inset:0;background:#0d0d0d;touch-action:none;}
   #pano canvas{outline:none;touch-action:none;}
 
-  .topbar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:14px;padding:16px 18px;pointer-events:none;}
-  .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:8px 13px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);pointer-events:auto;min-width:0;flex:0 1 auto;overflow:hidden;}
+  .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:14px;padding:16px 18px;pointer-events:none;}
+  .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:8px 13px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);pointer-events:auto;min-width:0;flex:1 1 auto;overflow:hidden;}
   .logo-link{display:inline-flex;align-items:center;flex:none;}
   .logo{height:16.5px;width:auto;color:var(--ink);display:block;}
   .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
-  .proj-toggle{display:flex;flex-direction:column;gap:2px;align-items:flex-start;justify-content:center;min-width:0;padding:0;margin:0;border:none;background:none;font-family:var(--font);text-align:left;cursor:default;}
+  .proj-toggle{display:flex;flex-direction:column;gap:2px;align-items:flex-start;justify-content:center;flex:1 1 auto;min-width:0;padding:0;margin:0;border:none;background:none;font-family:var(--font);text-align:left;cursor:default;}
   .proj-toggle.switchable{cursor:pointer;}
   .proj-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .proj-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:none;line-height:1;}
   .proj-toggle.switchable .proj-label{display:block;}
-  .proj-current{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74vw;line-height:1.1;}
+  .proj-current{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;line-height:1.1;}
   .proj-toggle.switchable .proj-current::after{content:"\25BE";font-size:8px;color:var(--muted);flex:none;}
 
   .controls{position:absolute;right:18px;bottom:18px;z-index:20;display:flex;gap:8px;pointer-events:auto;}
@@ -55,10 +55,10 @@
   .msg h1{margin:0;font-size:16px;font-weight:600;}
   .msg p{margin:0;font-size:12.5px;line-height:1.6;color:var(--muted);max-width:340px;}
 
-  .projects-menu{position:absolute;left:18px;top:64px;z-index:30;min-width:180px;max-width:calc(100vw - 36px);background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.16);pointer-events:auto;}
+  .projects-menu{position:absolute;left:18px;top:64px;z-index:41;min-width:180px;max-width:calc(100vw - 36px);background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:var(--radius);padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.16);pointer-events:auto;}
   .projects-menu[hidden]{display:none;}
   .projects-menu .mh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:5px 10px 7px;}
-  .proj-item{display:block;padding:9px 11px;font-size:12.5px;color:var(--ink);text-decoration:none;border-radius:var(--radius);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .proj-item{display:block;padding:9px 11px;font-size:12.5px;color:var(--ink);text-decoration:none;border-radius:var(--radius);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .proj-item:hover{background:rgba(25,25,25,.06);}
   .proj-item.current{font-weight:600;background:var(--ink);color:#fff;}
   .loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);padding:8px 16px;border-radius:var(--radius);opacity:0;transition:opacity .15s ease;pointer-events:none;}
@@ -126,7 +126,9 @@
       loadingEl=document.getElementById('loading'), msgEl=document.getElementById('msg');
 
   var TOUR = window.TOUR;
-  if(!TOUR || !TOUR.scenes || !TOUR.scenes.length){ msgEl.hidden=false; return; }
+  if(!TOUR){ msgEl.hidden=false; return; }
+  // A tour with no scenes yet (placeholder) still shows its name + switcher and a
+  // "Coming soon" message — handled at boot below.
   document.getElementById('projectName').textContent = TOUR.title || '';
 
   // View limits: tour-level values are the default; each scene may override with its own `settings`.
@@ -211,7 +213,15 @@
       a.href='viewer.html?tour='+encodeURIComponent(t.id);
       menu.appendChild(a);
     });
-    toggle.addEventListener('click',function(ev){ ev.stopPropagation(); var open=menu.hidden; menu.hidden=!open; toggle.setAttribute('aria-expanded',String(open)); });
+    // Align the menu's left edge under the project name (the toggle), not the logo.
+    var topbar=document.querySelector('.topbar');
+    function positionMenu(){
+      var t=toggle.getBoundingClientRect(), b=topbar.getBoundingClientRect();
+      menu.style.left=(t.left-b.left)+'px';
+      menu.style.top=(t.bottom-b.top+12)+'px';
+    }
+    toggle.addEventListener('click',function(ev){ ev.stopPropagation(); var open=menu.hidden; if(open) positionMenu(); menu.hidden=!open; toggle.setAttribute('aria-expanded',String(open)); });
+    window.addEventListener('resize',function(){ if(!menu.hidden) positionMenu(); });
     document.addEventListener('click',function(e){ if(!menu.hidden && !menu.contains(e.target) && !toggle.contains(e.target)){ menu.hidden=true; toggle.setAttribute('aria-expanded','false'); } });
   })();
 
@@ -241,11 +251,20 @@
   // Boot: load all scenes, open the one named by ?start= (or the first)
   showLoading(true);
   var chain=Promise.resolve();
-  TOUR.scenes.forEach(function(cfg){ chain=chain.then(function(){return buildScene(cfg);}); });
+  (TOUR.scenes||[]).forEach(function(cfg){ chain=chain.then(function(){return buildScene(cfg);}); });
   chain.then(function(){
     showLoading(false);
-    if(!scenes.length){ msgEl.hidden=false; document.getElementById('msgTitle').textContent='Panoramas not found';
-      document.getElementById('msgText').textContent='Check that the image files listed in config.js exist next to this page.'; return; }
+    if(!scenes.length){
+      msgEl.hidden=false;
+      if(!TOUR.scenes || !TOUR.scenes.length){   // placeholder project — no panoramas added yet
+        document.getElementById('msgTitle').textContent='Coming soon';
+        document.getElementById('msgText').textContent='Panoramas for this project will be added soon.';
+      } else {                                    // panoramas listed but failed to load
+        document.getElementById('msgTitle').textContent='Panoramas not found';
+        document.getElementById('msgText').textContent='Check that the image files listed in config.js exist next to this page.';
+      }
+      return;
+    }
     renderScenes();
     var params=new URLSearchParams(location.search);
     var startId=params.get('start');
