@@ -15,3 +15,7 @@ _*.html
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local-only: backup folder and test artifacts (not for the public repo)
+archive/
+_phone-test-qr.png
