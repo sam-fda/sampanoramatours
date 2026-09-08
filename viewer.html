@@ -63,6 +63,12 @@
   .proj-item.current{font-weight:600;background:var(--ink);color:#fff;}
   .loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);padding:8px 16px;border-radius:var(--radius);opacity:0;transition:opacity .15s ease;pointer-events:none;}
   .loading.show{opacity:1;}
+
+  /* Phones (default above): chip stretches full width. Desktop/tablet: compact box, top-left. */
+  @media (min-width:768px){
+    .bar-chip{flex:0 0 auto;}       /* hug content instead of filling the bar */
+    .proj-current{max-width:420px;} /* guard against an unusually long name */
+  }
 </style>
 </head>
 <body>
