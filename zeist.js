@@ -34,8 +34,8 @@ window.TOUR = {
       "name": "zeist panorama 01",
       "file": "panos/zeist-panorama-01.jpg",
       "front": {
-        "yaw": 90.1,
-        "pitch": -0.3
+        "yaw": 0,
+        "pitch": 0
       },
       "settings": {
         "fovMin": 45,
