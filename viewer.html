@@ -162,11 +162,23 @@
   try{ viewer.controls().disableMethod('pinch'); }catch(e){}
   var scenes=[], current=-1;
 
+  // Seam-safe yaw arc: clamp yaw to within ±half of the centre using shortest-angle
+  // math, so an arc that straddles the ±180° wrap point (e.g. front 90° + 190°) no
+  // longer jumps to the opposite edge. Result is normalised back to (-pi, pi].
+  function yawArcLimiter(centerRad, halfRad){
+    return function(p){
+      var d=Math.atan2(Math.sin(p.yaw-centerRad), Math.cos(p.yaw-centerRad));
+      if(d>halfRad) d=halfRad; else if(d<-halfRad) d=-halfRad;
+      var y=centerRad+d;
+      p.yaw=Math.atan2(Math.sin(y), Math.cos(y));
+      return p;
+    };
+  }
   function makeLimiter(S, w, yawCenterRad){
     var L=Marzipano.RectilinearView.limit;
     var parts=[ L.vfov(deg(S.fovMin),deg(S.fovMax)), L.hfov(deg(1),deg(150)) ];
     // (no resolution cap — the Zoom-in limit fully controls how far you can zoom)
-    if(S.yawLimited){ var half=deg(S.yawRange)/2; parts.push(L.yaw(yawCenterRad-half, yawCenterRad+half)); }
+    if(S.yawLimited){ parts.push(yawArcLimiter(yawCenterRad, deg(S.yawRange)/2)); }
     else parts.push(L.pitch(-Math.PI/2,Math.PI/2));
     if(S.pitchLimited) parts.push(L.pitch(-deg(S.pitchUp),deg(S.pitchDown)));
     else if(S.yawLimited) parts.push(L.pitch(-Math.PI/2,Math.PI/2));
