@@ -64,17 +64,13 @@
   .loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);padding:8px 16px;border-radius:var(--radius);opacity:0;transition:opacity .15s ease;pointer-events:none;}
   .loading.show{opacity:1;}
 
-  /* First-open "swipe to look around" hint (touch devices only) */
+  /* First-open "swipe to look around" hint (touch devices only) — animated gif, no background */
   .swipe-hint{position:absolute;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .6s ease;}
   .swipe-hint[hidden]{display:none;}
   .swipe-hint.fade{opacity:0;}
-  .swipe-hint-inner{display:flex;flex-direction:column;align-items:center;gap:13px;padding:20px 24px;background:rgba(13,13,13,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:14px;}
-  .swipe-row{display:flex;align-items:center;gap:12px;color:#fff;}
-  .swipe-hand{width:44px;height:44px;color:#fff;animation:swipeMove 1.8s ease-in-out infinite;}
-  .swipe-arrow{width:15px;height:15px;color:rgba(255,255,255,.65);flex:none;}
-  .swipe-hint span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.92);}
-  @keyframes swipeMove{0%,100%{transform:translateX(-11px);}50%{transform:translateX(11px);}}
-  @media (prefers-reduced-motion:reduce){ .swipe-hand{animation:none;} }
+  .swipe-hint-inner{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .swipe-gif{width:88px;height:88px;display:block;}
+  .swipe-hint span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
 
   /* Phones (default above): chip stretches full width. Desktop/tablet: compact box, top-left. */
   @media (min-width:768px){
@@ -110,11 +106,7 @@
 
 <div class="swipe-hint" id="swipeHint" hidden aria-hidden="true">
   <div class="swipe-hint-inner">
-    <div class="swipe-row">
-      <svg class="swipe-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-      <svg class="swipe-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
-      <svg class="swipe-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </div>
+    <img class="swipe-gif" src="swipe-hint.gif" alt="" width="88" height="88">
     <span>Swipe to look around</span>
   </div>
 </div>
