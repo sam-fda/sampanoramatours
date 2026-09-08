@@ -210,7 +210,10 @@
 
   function goTo(i){
     if(i<0||i>=scenes.length)return; current=i;
-    scenes[i].marzScene.switchTo({transitionDuration:600});
+    var s=scenes[i];
+    // Reset to the scene's starting frame every time (don't resume where the guest left off).
+    s.view.setYaw(s.front.yaw); s.view.setPitch(s.front.pitch); s.view.setFov(startFov(s.settings));
+    s.marzScene.switchTo({transitionDuration:600});
     renderScenes();
   }
   function renderScenes(){
