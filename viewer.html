@@ -65,9 +65,9 @@
   .loading.show{opacity:1;}
 
   /* First-open "swipe to look around" hint (touch devices only) — animated gif, no background */
-  .swipe-hint{position:absolute;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .6s ease;}
+  .swipe-hint{position:absolute;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .6s ease;}
   .swipe-hint[hidden]{display:none;}
-  .swipe-hint.fade{opacity:0;}
+  .swipe-hint.show{opacity:1;}
   .swipe-hint-inner{display:flex;flex-direction:column;align-items:center;gap:8px;}
   .swipe-gif{width:88px;height:88px;display:block;}
   .swipe-hint span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
@@ -270,28 +270,36 @@
     });
   })();
 
-  // First-open "swipe to look around" hint — touch devices only, once per session,
-  // auto-fades after ~2.8s or the moment the guest starts dragging.
+  // First-open "swipe to look around" hint — touch devices only, once per session.
+  // Fades IN over the loading screen (before the panorama appears); the auto-hide
+  // countdown is armed later (armSwipeHintTimeout) once the image is actually shown,
+  // so it lingers ~2.6s over the loaded view, or vanishes the moment a drag starts.
+  var _hintEl=document.getElementById('swipeHint'), _hintOn=false, _hintDone=false, _hintTimer=null;
+  function hideSwipeHint(){ if(_hintDone||!_hintOn) return; _hintDone=true; clearTimeout(_hintTimer); _hintEl.classList.remove('show'); setTimeout(function(){ _hintEl.hidden=true; },700); }
   function showSwipeHint(){
     var isTouch=(navigator.maxTouchPoints>0)||('ontouchstart' in window);
-    if(!isTouch) return;
-    try{ if(sessionStorage.getItem('sm_swipe_hint')) return; }catch(e){}
-    var h=document.getElementById('swipeHint'); if(!h) return;
+    if(!isTouch) return false;
+    try{ if(sessionStorage.getItem('sm_swipe_hint')) return false; }catch(e){}
+    if(!_hintEl) return false;
     try{ sessionStorage.setItem('sm_swipe_hint','1'); }catch(e){}
-    h.hidden=false;
-    var done=false;
-    function hide(){ if(done) return; done=true; h.classList.add('fade'); setTimeout(function(){ h.hidden=true; },700); }
-    var t=setTimeout(hide,2800);
-    panoEl.addEventListener('touchstart',function(){ clearTimeout(t); hide(); },{once:true,passive:true});
+    _hintOn=true; _hintEl.hidden=false;
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(_hintOn && !_hintDone) _hintEl.classList.add('show'); }); });
+    panoEl.addEventListener('touchstart', hideSwipeHint, {once:true, passive:true});
+    return true;
   }
+  function armSwipeHintTimeout(){ if(_hintOn && !_hintDone) _hintTimer=setTimeout(hideSwipeHint, 2600); }
 
-  // Boot: load all scenes, open the one named by ?start= (or the first)
-  showLoading(true);
+  // Boot: load all scenes, open the one named by ?start= (or the first).
+  // Fade the swipe hint in FIRST (over the loading screen) when there are scenes;
+  // otherwise show the normal Loading indicator.
+  var _hintShown = (TOUR.scenes && TOUR.scenes.length) ? showSwipeHint() : false;
+  if(!_hintShown) showLoading(true);
   var chain=Promise.resolve();
   (TOUR.scenes||[]).forEach(function(cfg){ chain=chain.then(function(){return buildScene(cfg);}); });
   chain.then(function(){
     showLoading(false);
     if(!scenes.length){
+      hideSwipeHint();
       msgEl.hidden=false;
       if(!TOUR.scenes || !TOUR.scenes.length){   // placeholder project — no panoramas added yet
         document.getElementById('msgTitle').textContent='Coming soon';
@@ -308,7 +316,7 @@
     var idx=0;
     if(startId){ for(var i=0;i<scenes.length;i++){ if(scenes[i].id===startId){ idx=i; break; } } }
     goTo(idx);
-    showSwipeHint();
+    armSwipeHintTimeout();
   });
   } // init()
 })();
