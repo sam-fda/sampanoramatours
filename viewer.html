@@ -70,7 +70,7 @@
   .swipe-hint.show{opacity:1;}
   .swipe-hint-inner{display:flex;flex-direction:column;align-items:center;gap:8px;}
   .swipe-gif{width:88px;height:88px;display:block;}
-  .swipe-hint span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
+  .swipe-hint span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#fff;}
 
   /* Phones (default above): chip stretches full width. Desktop/tablet: compact box, top-left. */
   @media (min-width:768px){
@@ -274,18 +274,14 @@
   // Fades IN over the loading screen (before the panorama appears); the auto-hide
   // countdown is armed later (armSwipeHintTimeout) once the image is actually shown,
   // so it lingers ~2.6s over the loaded view, or vanishes the moment a drag starts.
-  var _hintEl=document.getElementById('swipeHint'), _hintOn=false, _hintDone=false, _hintTimer=null;
+  var _hintEl=document.getElementById('swipeHint'), _hintOn=false, _hintDone=false, _hintTimer=null, _hintShownAt=0;
   function hideSwipeHint(){ if(_hintDone||!_hintOn) return; _hintDone=true; clearTimeout(_hintTimer); _hintEl.classList.remove('show'); setTimeout(function(){ _hintEl.hidden=true; },700); }
   function showSwipeHint(){
     var isTouch=(navigator.maxTouchPoints>0)||('ontouchstart' in window);
-    if(!isTouch) return false;
-    // Per-project flag: each project page shows the hint once per session; switching
-    // scenes within a project never reloads, so it won't repeat there either.
-    var _hintKey='sm_swipe_hint_'+(_t||'_default');
-    try{ if(sessionStorage.getItem(_hintKey)) return false; }catch(e){}
-    if(!_hintEl) return false;
-    try{ sessionStorage.setItem(_hintKey,'1'); }catch(e){}
-    _hintOn=true; _hintEl.hidden=false;
+    if(!isTouch || !_hintEl) return false;
+    // Show on every project page load (a project switch is always a fresh load).
+    // Scene switches don't reload, so they never trigger this — no persistence needed.
+    _hintOn=true; _hintShownAt=Date.now(); _hintEl.hidden=false;
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(_hintOn && !_hintDone) _hintEl.classList.add('show'); }); });
     panoEl.addEventListener('touchstart', hideSwipeHint, {once:true, passive:true});
     return true;
@@ -313,13 +309,15 @@
       }
       return;
     }
-    renderScenes();
     var params=new URLSearchParams(location.search);
     var startId=params.get('start');
     var idx=0;
     if(startId){ for(var i=0;i<scenes.length;i++){ if(scenes[i].id===startId){ idx=i; break; } } }
-    goTo(idx);
-    armSwipeHintTimeout();
+    function reveal(){ goTo(idx); armSwipeHintTimeout(); }   // goTo() also renders the scene slider
+    // When the hint is up, hold the panorama back so the hint is always seen first
+    // (>=1.5s after it appears), without piling extra delay onto already-slow loads.
+    if(_hintShown){ setTimeout(reveal, Math.max(0, 1500-(Date.now()-_hintShownAt))); }
+    else { reveal(); }
   });
   } // init()
 })();
