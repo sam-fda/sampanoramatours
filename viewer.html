@@ -282,6 +282,11 @@
     // Show on every project page load (a project switch is always a fresh load).
     // Scene switches don't reload, so they never trigger this — no persistence needed.
     _hintOn=true; _hintShownAt=Date.now(); _hintEl.hidden=false;
+    // The gif plays once (no loop flag). Give it a unique URL each time the hint shows
+    // so a project switch re-decodes it from frame 0 instead of showing the cached,
+    // frozen last frame.
+    var _gif=_hintEl.querySelector('.swipe-gif');
+    if(_gif) _gif.src='swipe-hint.gif?_='+Date.now();
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(_hintOn && !_hintDone) _hintEl.classList.add('show'); }); });
     panoEl.addEventListener('touchstart', hideSwipeHint, {once:true, passive:true});
     return true;
