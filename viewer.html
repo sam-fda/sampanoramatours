@@ -279,9 +279,12 @@
   function showSwipeHint(){
     var isTouch=(navigator.maxTouchPoints>0)||('ontouchstart' in window);
     if(!isTouch) return false;
-    try{ if(sessionStorage.getItem('sm_swipe_hint')) return false; }catch(e){}
+    // Per-project flag: each project page shows the hint once per session; switching
+    // scenes within a project never reloads, so it won't repeat there either.
+    var _hintKey='sm_swipe_hint_'+(_t||'_default');
+    try{ if(sessionStorage.getItem(_hintKey)) return false; }catch(e){}
     if(!_hintEl) return false;
-    try{ sessionStorage.setItem('sm_swipe_hint','1'); }catch(e){}
+    try{ sessionStorage.setItem(_hintKey,'1'); }catch(e){}
     _hintOn=true; _hintEl.hidden=false;
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(_hintOn && !_hintDone) _hintEl.classList.add('show'); }); });
     panoEl.addEventListener('touchstart', hideSwipeHint, {once:true, passive:true});
