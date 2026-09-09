@@ -14,7 +14,7 @@ window.TOUR = {
     {
       "id": "zeist-panorama-03",
       "name": "zeist panorama 03",
-      "file": "panos/zeist-panorama-03.jpg",
+      "file": "panos/zeist-panorama-03.webp",
       "front": {
         "yaw": -8.7,
         "pitch": 2.9
@@ -32,7 +32,7 @@ window.TOUR = {
     {
       "id": "zeist-panorama-01",
       "name": "zeist panorama 01",
-      "file": "panos/zeist-panorama-01.jpg",
+      "file": "panos/zeist-panorama-01.webp",
       "front": {
         "yaw": 0,
         "pitch": 0
@@ -50,7 +50,7 @@ window.TOUR = {
     {
       "id": "zeist-panorama-02",
       "name": "Zeist Panorama 02",
-      "file": "panos/zeist-panorama-02.jpg",
+      "file": "panos/zeist-panorama-02.webp",
       "front": {
         "yaw": 0,
         "pitch": 0

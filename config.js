@@ -8,8 +8,8 @@ window.TOUR = {
     pitchLimited: true, pitchUp: 55, pitchDown: 30
   },
   scenes: [
-    { id: "margriettoren", name: "Margriettoren",  file: "panos/margriettoren-01.jpg",  front: { yaw: 0, pitch: 0 } },
-    { id: "zeist-1",       name: "Zeist — view 1", file: "panos/zeist-panorama-01.jpg", front: { yaw: 0, pitch: 0 } },
-    { id: "zeist-2",       name: "Zeist — view 2", file: "panos/zeist-panorama-03.jpg", front: { yaw: 0, pitch: 0 } }
+    { id: "margriettoren", name: "Margriettoren",  file: "panos/margriettoren-01.webp",  front: { yaw: 0, pitch: 0 } },
+    { id: "zeist-1",       name: "Zeist — view 1", file: "panos/zeist-panorama-01.webp", front: { yaw: 0, pitch: 0 } },
+    { id: "zeist-2",       name: "Zeist — view 2", file: "panos/zeist-panorama-03.webp", front: { yaw: 0, pitch: 0 } }
   ]
 };

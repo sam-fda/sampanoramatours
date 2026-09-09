@@ -14,7 +14,7 @@ window.TOUR = {
     {
       "id": "margriettoren-01",
       "name": "margriettoren 01",
-      "file": "panos/margriettoren-01.jpg",
+      "file": "panos/margriettoren-01.webp",
       "front": {
         "yaw": -1.8,
         "pitch": -2.9

@@ -14,7 +14,7 @@ window.TOUR = {
     {
       "id": "omval-panorama-01",
       "name": "omval panorama 01",
-      "file": "panos/omval-panorama-01.jpg",
+      "file": "panos/omval-panorama-01.webp",
       "front": {
         "yaw": -0.8,
         "pitch": -10.6
@@ -32,7 +32,7 @@ window.TOUR = {
     {
       "id": "omval-panorama-02",
       "name": "omval panorama 02",
-      "file": "panos/omval-panorama-02.jpg",
+      "file": "panos/omval-panorama-02.webp",
       "front": {
         "yaw": -178.6,
         "pitch": -1.5
