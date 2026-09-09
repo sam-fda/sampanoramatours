@@ -57,9 +57,9 @@ window.TOUR = {
       },
       "settings": {
         "fovMin": 35,
-        "fovMax": 70,
+        "fovMax": 90,
         "yawLimited": true,
-        "yawRange": 140,
+        "yawRange": 150,
         "pitchLimited": true,
         "pitchUp": 10,
         "pitchDown": 25
