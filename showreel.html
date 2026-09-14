@@ -25,6 +25,8 @@
   /* Persistent logo chip, top-left */
   .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;gap:14px;padding:20px 22px;pointer-events:none;}
   .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:9px 14px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);}
+  .logo-link{display:inline-flex;align-items:center;flex:none;pointer-events:auto;}
+  .logo-link:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .logo{height:17px;width:auto;color:var(--ink);display:block;align-self:center;}
   .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
   .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;transition:opacity .5s ease;}
@@ -43,8 +45,11 @@
   .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
 
   /* Loop progress segments, bottom-center */
-  .segs{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:30;display:flex;gap:7px;pointer-events:none;}
-  .seg{width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.32);box-shadow:0 1px 3px rgba(0,0,0,.25);overflow:hidden;}
+  .segs{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;gap:7px;}
+  .seg-hit{-webkit-appearance:none;appearance:none;background:none;border:0;margin:0;padding:12px 0;cursor:pointer;display:block;}
+  .seg-hit:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+  .seg{display:block;width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.32);box-shadow:0 1px 3px rgba(0,0,0,.25);overflow:hidden;transition:background .15s ease,transform .15s ease;}
+  .seg-hit:hover .seg{background:rgba(255,255,255,.62);transform:scaleY(1.6);}
   .seg .fill{display:block;height:100%;width:0;background:#fff;}
 
   /* Boot / loading splash */
@@ -55,11 +60,6 @@
   .splash .dots{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
   .splash h1{margin:0;font-size:16px;font-weight:600;}
   .splash p{margin:0;font-size:12.5px;line-height:1.6;color:var(--muted);max-width:340px;}
-
-  /* Transient hint (fullscreen / controls), fades away */
-  .hint{position:absolute;right:22px;bottom:26px;z-index:35;display:flex;gap:8px;align-items:center;padding:8px 13px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);transition:opacity .6s ease;pointer-events:none;}
-  .hint[hidden]{display:none;}
-  .hint.gone{opacity:0;}
 
   /* Paused badge */
   .paused{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:35;padding:10px 20px;background:rgba(25,25,25,.72);color:#fff;border-radius:var(--radius);font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:0;transition:opacity .2s ease;pointer-events:none;}
@@ -76,7 +76,9 @@
 
 <div class="topbar">
   <div class="bar-chip">
-    <svg class="logo" viewBox="0 0 1280 200" role="img" aria-label="Space & Matter"><use href="#sm-logo"/></svg>
+    <a class="logo-link" href="https://www.spaceandmatter.nl" target="_blank" rel="noopener noreferrer" title="spaceandmatter.nl">
+      <svg class="logo" viewBox="0 0 1280 200" role="img" aria-label="Space & Matter — spaceandmatter.nl"><use href="#sm-logo"/></svg>
+    </a>
     <span class="bar-div"></span>
     <span class="proj-current" id="projectName"></span>
   </div>
@@ -90,7 +92,6 @@
 
 <div class="segs" id="segs"></div>
 
-<div class="hint" id="hint" hidden>Click: fullscreen &nbsp;·&nbsp; Space: pause &nbsp;·&nbsp; ← →: skip</div>
 <div class="paused" id="pausedBadge">Paused</div>
 
 <div class="splash" id="splash">
@@ -142,7 +143,7 @@
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
       projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
       qrcardEl=document.getElementById('qrcard'), qrImg=document.getElementById('qrImg'),
-      segsEl=document.getElementById('segs'), hintEl=document.getElementById('hint'),
+      segsEl=document.getElementById('segs'),
       pausedBadge=document.getElementById('pausedBadge');
 
   // -------- Load every tour config, in tours.js order, into one playlist --------
@@ -263,19 +264,22 @@
       splashEl.classList.add('fade');
       setTimeout(function(){ splashEl.hidden=true; }, 800);
       run(items);
-      showHint();
       requestWakeLock();
     });
   }
 
   // ------------------------------- Segments -------------------------------
   var segFills=[];
+  var jumpTo=null;   // set by run(): jump straight to scene i
   function buildSegments(n){
     segsEl.innerHTML=''; segFills=[];
     for(var i=0;i<n;i++){
-      var seg=document.createElement('div'); seg.className='seg';
+      var hit=document.createElement('button'); hit.type='button'; hit.className='seg-hit';
+      hit.setAttribute('aria-label','Show image '+(i+1)); hit.title='Image '+(i+1);
+      var seg=document.createElement('span'); seg.className='seg';
       var f=document.createElement('span'); f.className='fill';
-      seg.appendChild(f); segsEl.appendChild(seg); segFills.push(f);
+      seg.appendChild(f); hit.appendChild(seg); segsEl.appendChild(hit); segFills.push(f);
+      hit.addEventListener('click', (function(idx){ return function(){ if(jumpTo) jumpTo(idx); }; })(i));
     }
   }
   function setSegFills(current){
@@ -376,12 +380,14 @@
       panLoop(i, it, myToken);
     }
 
+    jumpTo=function(i){ paused=false; pausedBadge.classList.remove('show'); playScene(i); };
+
     // Controls (optional — handy for testing / manual kiosks)
     document.addEventListener('keydown',function(ev){
       if(ev.key===' '){ ev.preventDefault(); paused=!paused; pausedBadge.classList.toggle('show',paused);
                         if(paused){ try{ videoEl.pause(); }catch(e){} } }
-      else if(ev.key==='ArrowRight'){ paused=false; pausedBadge.classList.remove('show'); playScene((current+1)%N); }
-      else if(ev.key==='ArrowLeft'){ paused=false; pausedBadge.classList.remove('show'); playScene((current-1+N)%N); }
+      else if(ev.key==='ArrowRight'){ jumpTo((current+1)%N); }
+      else if(ev.key==='ArrowLeft'){ jumpTo((current-1+N)%N); }
       else if(ev.key==='f'||ev.key==='F'){ toggleFullscreen(); }
     });
 
@@ -401,15 +407,8 @@
       if(p && p.catch) p.catch(function(){});   // ignore blocked/no-gesture rejections
     }catch(e){}
   }
-  fsBtn.addEventListener('click', function(ev){ ev.stopPropagation(); toggleFullscreen(); });
+  fsBtn.addEventListener('click', toggleFullscreen);   // only this button toggles; Esc also exits
   document.addEventListener('fullscreenchange', updateFsIcon);
-  document.addEventListener('click', toggleFullscreen);   // click anywhere else also toggles
-
-  var hintTimer=null;
-  function showHint(){
-    hintEl.hidden=false;
-    hintTimer=setTimeout(function(){ hintEl.classList.add('gone'); setTimeout(function(){ hintEl.hidden=true; },700); }, 4500);
-  }
 
   // Hide the mouse cursor after a few idle seconds (kiosk look); reveal on move.
   var cursorTimer=null;
