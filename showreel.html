@@ -21,14 +21,17 @@
 
   /* Persistent logo chip, top-left */
   .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;gap:14px;padding:20px 22px;pointer-events:none;}
-  .bar-chip{display:inline-flex;align-items:center;gap:12px;padding:9px 14px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);}
-  .logo{height:17px;width:auto;color:var(--ink);display:block;}
+  .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:9px 14px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);}
+  .logo{height:17px;width:auto;color:var(--ink);display:block;align-self:center;}
+  .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
+  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;transition:opacity .5s ease;}
 
-  /* Project caption, bottom-left */
-  .caption{position:absolute;left:22px;bottom:24px;z-index:30;display:flex;flex-direction:column;gap:3px;padding:11px 15px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);opacity:0;transform:translateY(6px);transition:opacity .6s ease,transform .6s ease;max-width:min(60vw,460px);}
-  .caption.show{opacity:1;transform:none;}
-  .cap-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);line-height:1;}
-  .cap-title{font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* Fullscreen button, top-right */
+  .top-full{margin-left:auto;pointer-events:auto;-webkit-appearance:none;appearance:none;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);transition:background .15s ease,border-color .15s ease,transform .05s ease;}
+  .top-full:hover{background:#fff;border-color:var(--line-strong);}
+  .top-full:active{transform:translateY(1px);}
+  .top-full:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .top-full svg{width:18px;height:18px;display:block;}
 
   /* Loop progress segments, bottom-center */
   .segs{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:30;display:flex;gap:7px;pointer-events:none;}
@@ -64,12 +67,10 @@
 <div class="topbar">
   <div class="bar-chip">
     <svg class="logo" viewBox="0 0 1280 200" role="img" aria-label="Space & Matter"><use href="#sm-logo"/></svg>
+    <span class="bar-div"></span>
+    <span class="proj-current" id="projectName"></span>
   </div>
-</div>
-
-<div class="caption" id="caption">
-  <span class="cap-label">Space &amp; Matter</span>
-  <span class="cap-title" id="capTitle"></span>
+  <button class="top-full" id="fsBtn" type="button" title="Fullscreen" aria-label="Toggle fullscreen"></button>
 </div>
 
 <div class="segs" id="segs"></div>
@@ -115,7 +116,7 @@
 
   var panoEl=document.getElementById('pano'),
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
-      captionEl=document.getElementById('caption'), capTitleEl=document.getElementById('capTitle'),
+      projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
       segsEl=document.getElementById('segs'), hintEl=document.getElementById('hint'),
       pausedBadge=document.getElementById('pausedBadge');
 
@@ -253,14 +254,13 @@
     for(var i=0;i<segFills.length;i++){ segFills[i].style.width = (i<current?'100%':'0%'); }
   }
 
-  // ------------------------------- Caption -------------------------------
+  // --------------------------- Project name (top bar) ---------------------------
   var lastTitle=null;
-  function setCaption(title){
-    if(title===lastTitle){ captionEl.classList.add('show'); return; }
+  function setProjectName(title){
+    if(title===lastTitle) return;   // scenes within one tour keep the name steady (no flicker)
     lastTitle=title;
-    captionEl.classList.remove('show');
-    // let the fade-out land, then swap text and fade back in
-    setTimeout(function(){ capTitleEl.textContent=title; void captionEl.offsetWidth; captionEl.classList.add('show'); }, 250);
+    projectNameEl.style.opacity='0';
+    setTimeout(function(){ projectNameEl.textContent=title; projectNameEl.style.opacity='1'; }, 250);
   }
 
   // ------------------------------- Playback -------------------------------
@@ -273,7 +273,7 @@
       var it=list[i];
       it.view.setYaw(it.panFrom); it.view.setPitch(it.frontPitch); it.view.setFov(it.fovFrom);
       it.marzScene.switchTo({transitionDuration:FADE_MS});
-      setCaption(it.tourTitle);
+      setProjectName(it.tourTitle);
       setSegFills(i);
       start=0; lastNow=0;
       requestAnimationFrame(function loop(now){
@@ -305,13 +305,21 @@
   }
 
   // ------------------------------- Kiosk niceties -------------------------------
+  var ENTER_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+  var EXIT_ICON ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+  function updateFsIcon(){ fsBtn.innerHTML = document.fullscreenElement ? EXIT_ICON : ENTER_ICON; }
+  updateFsIcon();
   function toggleFullscreen(){
     try{
-      if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){})(); }
-      else{ (document.exitFullscreen||function(){})(); }
+      var el=document.documentElement, p;
+      if(!document.fullscreenElement){ if(el.requestFullscreen) p=el.requestFullscreen(); }
+      else{ if(document.exitFullscreen) p=document.exitFullscreen(); }
+      if(p && p.catch) p.catch(function(){});   // ignore blocked/no-gesture rejections
     }catch(e){}
   }
-  document.addEventListener('click', toggleFullscreen);
+  fsBtn.addEventListener('click', function(ev){ ev.stopPropagation(); toggleFullscreen(); });
+  document.addEventListener('fullscreenchange', updateFsIcon);
+  document.addEventListener('click', toggleFullscreen);   // click anywhere else also toggles
 
   var hintTimer=null;
   function showHint(){
