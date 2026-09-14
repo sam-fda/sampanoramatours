@@ -108,7 +108,7 @@
   var P=new URLSearchParams(location.search);
   function numParam(name,def){ var v=parseFloat(P.get(name)); return isFinite(v)&&v>=0 ? v : def; }
   var PAN_MS  = numParam('pan', 18000);   // pan duration per scene
-  var HOLD_MS = numParam('hold', 1000);   // still hold at the end of each pan
+  var HOLD_MS = numParam('hold', 0);      // still hold at the end of each pan (0 = flow straight into the fade)
   var FADE_MS = numParam('fade', 1500);   // cross-fade between scenes
   var ZOOM    = numParam('zoom', 8);      // gentle push-in over the pan, in degrees of FOV
 
@@ -302,10 +302,10 @@
         lastNow=now;
         var el=now-start;
         var t=clamp(el/PAN_MS,0,1);
-        var e=easeInOut(t);
-        it.view.setYaw(lerp(it.panFrom,it.panTo,e));
+        // Linear (constant-speed) motion — no easing, so nothing speeds up mid-pan.
+        it.view.setYaw(lerp(it.panFrom,it.panTo,t));
         it.view.setPitch(it.frontPitch);
-        it.view.setFov(lerp(it.fovFrom,it.fovTo,e));
+        it.view.setFov(lerp(it.fovFrom,it.fovTo,t));
         if(segFills[i]) segFills[i].style.width = clamp(el/(PAN_MS+HOLD_MS),0,1)*100+'%';
         if(el < PAN_MS+HOLD_MS){ requestAnimationFrame(loop); }
         else { playScene((i+1)%N); }                // loop forever
