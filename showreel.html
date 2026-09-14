@@ -33,6 +33,12 @@
   .top-full:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
   .top-full svg{width:18px;height:18px;display:block;}
 
+  /* Per-project QR card, below the logo/name chip (top-left) */
+  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);transition:opacity .5s ease;}
+  .qrcard[hidden]{display:none;}
+  .qrcard img{width:100%;height:auto;display:block;}
+  .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
+
   /* Loop progress segments, bottom-center */
   .segs{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:30;display:flex;gap:7px;pointer-events:none;}
   .seg{width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.32);box-shadow:0 1px 3px rgba(0,0,0,.25);overflow:hidden;}
@@ -71,6 +77,11 @@
     <span class="proj-current" id="projectName"></span>
   </div>
   <button class="top-full" id="fsBtn" type="button" title="Fullscreen" aria-label="Toggle fullscreen"></button>
+</div>
+
+<div class="qrcard" id="qrcard" hidden>
+  <img id="qrImg" alt="QR code — scan to explore this project">
+  <div class="qr-label">Scan to explore</div>
 </div>
 
 <div class="segs" id="segs"></div>
@@ -117,6 +128,7 @@
   var panoEl=document.getElementById('pano'),
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
       projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
+      qrcardEl=document.getElementById('qrcard'), qrImg=document.getElementById('qrImg'),
       segsEl=document.getElementById('segs'), hintEl=document.getElementById('hint'),
       pausedBadge=document.getElementById('pausedBadge');
 
@@ -254,13 +266,20 @@
     for(var i=0;i<segFills.length;i++){ segFills[i].style.width = (i<current?'100%':'0%'); }
   }
 
-  // --------------------------- Project name (top bar) ---------------------------
+  // ----------------------- Project name + QR (top left) -----------------------
+  // Missing QR file → hide the card rather than show a broken image.
+  qrImg.addEventListener('error', function(){ qrcardEl.hidden=true; });
   var lastTitle=null;
-  function setProjectName(title){
-    if(title===lastTitle) return;   // scenes within one tour keep the name steady (no flicker)
+  function setProjectName(title, tourId){
+    if(title===lastTitle) return;   // scenes within one tour keep the name/QR steady (no flicker)
     lastTitle=title;
     projectNameEl.style.opacity='0';
-    setTimeout(function(){ projectNameEl.textContent=title; projectNameEl.style.opacity='1'; }, 250);
+    qrcardEl.style.opacity='0';
+    setTimeout(function(){
+      projectNameEl.textContent=title; projectNameEl.style.opacity='1';
+      if(tourId){ qrImg.src='qr/'+tourId+'.png'; qrcardEl.hidden=false; qrcardEl.style.opacity='1'; }
+      else { qrcardEl.hidden=true; }
+    }, 250);
   }
 
   // ------------------------------- Playback -------------------------------
@@ -273,7 +292,7 @@
       var it=list[i];
       it.view.setYaw(it.panFrom); it.view.setPitch(it.frontPitch); it.view.setFov(it.fovFrom);
       it.marzScene.switchTo({transitionDuration:FADE_MS});
-      setProjectName(it.tourTitle);
+      setProjectName(it.tourTitle, it.tourId);
       setSegFills(i);
       start=0; lastNow=0;
       requestAnimationFrame(function loop(now){
