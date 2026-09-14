@@ -133,7 +133,7 @@
   // The video's own length drives how long the scene shows. The panorama is still built as a
   // fallback: if the file is missing or can't autoplay, that scene silently pans instead.
   var VIDEO = {
-    'margriettoren': 'video/margriettoren.mp4'
+    'margriettoren': 'video/margriettoren.mp4?v=03'
   };
   var MUTE = (P.get('mute')!=='0');       // muted by default so it always autoplays; ?mute=0 for sound
 
@@ -324,7 +324,10 @@
       var want=new URL(it.video, location.href).href;
       if(videoEl.src!==want){ videoEl.src=it.video; }   // don't re-fetch an already-preloaded clip
       try{ videoEl.currentTime=0; }catch(e){}
-      var pp=videoEl.play(); if(pp&&pp.catch) pp.catch(fallback);
+      var pp=videoEl.play();
+      // Only real failures fall back; an AbortError (play interrupted by a seek/skip) is harmless —
+      // the loop below simply retries play().
+      if(pp&&pp.catch) pp.catch(function(e){ if(!e || e.name!=='AbortError') fallback(); });
       videoEl.classList.add('show');
       requestAnimationFrame(function loop(){
         if(myToken!==token || !alive) return;
