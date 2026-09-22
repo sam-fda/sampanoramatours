@@ -384,6 +384,15 @@
       el.style.zIndex=z; el.classList.add('show');
       setTimeout(function(){ if(myToken===token) hideOverlays(el); }, FADE_MS);
     }
+    // The name/QR must not run ahead of the picture. Scenes reveal at different moments
+    // (a video waits until it has a frame), so the announcement is tied to the reveal and
+    // lands part-way through the cross-fade, as the new visual becomes the dominant one.
+    function announce(it, myToken){
+      setTimeout(function(){
+        if(myToken===token) setProjectName(it.projectName, it.qr);
+      }, Math.round(FADE_MS*0.45));
+    }
+
     function showPano(it, duration){
       it.view.setYaw(it.panFrom); it.view.setPitch(it.frontPitch); it.view.setFov(it.fovFrom);
       it.marzScene.switchTo({transitionDuration:duration});
@@ -427,6 +436,7 @@
       var zFrom=zoomIn?1:ZIMG, zTo=zoomIn?ZIMG:1;
       el.style.transform='scale('+zFrom+')';
       presentOverlay(el, 6, myToken);
+      announce(it, myToken);
       timedLoop(i, myToken, STILL_MS, function(t){ el.style.transform='scale('+lerp(zFrom,zTo,t)+')'; });
     }
 
@@ -439,7 +449,7 @@
       function fallback(){                       // can't play -> panorama if there is one, else skip
         if(myToken!==token || done) return;
         alive=false;
-        if(it.marzScene){ showPano(it, FADE_MS); hideOverlays(null); playPanoScene(i, it, myToken); }
+        if(it.marzScene){ showPano(it, FADE_MS); hideOverlays(null); announce(it, myToken); playPanoScene(i, it, myToken); }
         else { done=true; next(); }
       }
       v.onended=go; v.onerror=fallback;
@@ -449,15 +459,25 @@
       // Only real failures fall back; an AbortError (play interrupted by a seek/skip) is harmless -
       // the loop below simply retries play().
       if(pp&&pp.catch) pp.catch(function(e){ if(!e || e.name!=='AbortError') fallback(); });
-      // Only fade the clip in once it actually has a frame, so we never cross-fade onto
-      // black while it buffers; the previous scene stays up until then.
-      function reveal(){ if(myToken===token) presentOverlay(v, 9, myToken); }
-      if(v.readyState>=2){ reveal(); }
-      else {
-        var guard=setTimeout(reveal, 5000);      // don't hold the reel forever on a slow link
-        v.addEventListener('loadeddata', function once(){
-          v.removeEventListener('loadeddata', once); clearTimeout(guard); reveal();
+      // Only fade the clip in once it actually has a frame on screen, so we never cross-fade
+      // onto black while it buffers; the previous scene stays up until then.
+      // NOTE: rewinding to 0 above starts a seek, which briefly drops readyState - and
+      // 'loadeddata' has already fired during preload and will not fire again. So wait on
+      // events that DO repeat: a presented frame (requestVideoFrameCallback) or 'playing'.
+      var revealed=false;
+      function reveal(){
+        if(revealed || myToken!==token) return;
+        revealed=true; presentOverlay(v, 9, myToken); announce(it, myToken);
+      }
+      if(v.readyState>=2 && !v.seeking){ reveal(); }
+      else if(typeof v.requestVideoFrameCallback==='function'){
+        v.requestVideoFrameCallback(function(){ reveal(); });
+        setTimeout(reveal, 3000);                                  // safety net
+      } else {
+        ['playing','seeked','canplay'].forEach(function(ev){
+          v.addEventListener(ev, function once(){ v.removeEventListener(ev, once); reveal(); });
         });
+        setTimeout(reveal, 3000);                                  // safety net
       }
       requestAnimationFrame(function loop(){
         if(myToken!==token || !alive) return;
@@ -478,15 +498,16 @@
     function playScene(i){
       current=i; token++; var myToken=token;
       var it=list[i];
-      setProjectName(it.projectName, it.qr);
       setSegFills(i);
       preloadNext(i);
       if(it.kind==='video'){ playVideoScene(i, it, myToken); return; }
       if(it.kind==='image'){ playImageScene(i, it, myToken); return; }
       // Panorama: if an overlay is covering the screen, put the panorama in place instantly
       // behind it and let the overlay fade away over it, so nothing flashes through.
-      showPano(it, overlayVisible() ? 0 : FADE_MS);
+      var instant = overlayVisible();
+      showPano(it, instant ? 0 : FADE_MS);
       hideOverlays(null);
+      announce(it, myToken);
       playPanoScene(i, it, myToken);
     }
 
