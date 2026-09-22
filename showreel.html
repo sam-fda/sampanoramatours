@@ -19,8 +19,11 @@
   #pano{position:absolute;inset:0;background:#0d0d0d;}
   #pano canvas{outline:none;}
   /* Rendered-video scenes sit above the panorama canvas, below the chrome */
-  .reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0d0d0d;z-index:5;opacity:0;transition:opacity .6s ease;pointer-events:none;}
+  .reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0d0d0d;z-index:9;opacity:0;transition:opacity .6s ease;pointer-events:none;}
   .reel-video.show{opacity:1;}
+  /* Still images: two layers so one can cross-fade into the other while it slowly zooms */
+  .reel-still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0d0d0d;z-index:5;opacity:0;transition:opacity .6s ease;pointer-events:none;will-change:transform,opacity;}
+  .reel-still.show{opacity:1;}
 
   /* Persistent logo chip, top-left */
   .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;gap:14px;padding:20px 22px;pointer-events:none;}
@@ -72,7 +75,8 @@
 <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><symbol id="sm-logo" viewBox="0 0 1280 200"><g fill="currentColor"><path d="M63.21,155.48c-33.73,0-46.76-16.97-47.8-34.14l27.11-2.9c1.24,11.17,7.86,16.97,20.69,16.97s16.97-6.41,16.97-12.62-4.76-9.31-13.24-10.76l-16.35-2.69c-14.9-2.48-31.45-10.76-31.45-31.04,0-15.73,13.04-32.48,42.21-32.48,31.24,0,41.59,16.97,43.86,32.28l-24.83,2.9c-1.86-8.48-6.83-15.31-19.66-15.31s-15.93,6.21-15.93,10.55c0,6.41,4.55,9.1,12.41,10.55l17.79,3.1c20.07,3.52,32.28,13.04,32.28,30.83s-13.66,34.76-44.07,34.76Z"/><path d="M226.26,99.82c0,32.07-17.79,55.66-46.97,55.66-13.86,0-24.21-5.38-31.45-14.48v50.28h-27.11V48.3h25.86v14.28c7.04-10.35,18-16.76,32.69-16.76,28.97,0,46.97,21.52,46.97,54ZM147.42,100.65c0,18.21,9.72,32.07,26.07,32.07s24.83-13.66,24.83-32.07-8.69-32.28-24.83-32.28-26.07,13.24-26.07,32.28Z"/><path d="M324.75,152.99c-7.24,0-19.04-2.07-22.35-12.83-6.83,9.72-17.59,15.31-31.86,15.31-24.42,0-36.62-15.1-36.62-30.83,0-19.66,13.45-29.38,31.66-32.48l28.14-4.76c4.76-.83,6-3.52,6-6.83,0-4.76-3.1-14.07-17.38-14.07-15.1,0-19.04,9.31-20.28,15.52l-25.45-2.69c2.28-15.73,16.35-33.52,46.76-33.52s42.83,18.62,42.83,38.48v38.69c0,4.97,1.66,7.66,7.45,7.66h4.14v22.35h-13.04ZM275.92,134.78c13.66,0,24.21-10.35,24.21-25.45v-4.76l-25.86,4.14c-10.35,1.66-13.86,7.04-13.86,13.45,0,7.66,4.97,12.62,15.52,12.62Z"/><path d="M416.2,113.06l25.86,3.31c-4.14,24.42-22.14,39.11-48.62,39.11-33.31,0-51.73-23.17-51.73-54.62s18.83-55.04,51.93-55.04c27.52,0,45.31,14.48,49.04,40.14l-26.48,2.9c-2.28-12.62-8.9-20.48-22.55-20.48-17.17,0-24.21,14.07-24.21,32.48s7.24,32.07,24.42,32.07c13.24,0,20.48-7.86,22.35-19.86Z"/><path d="M523.38,118.65l23.59,5.59c-6,22.14-24.42,31.24-45.52,31.24-34.14,0-52.76-20.69-52.76-54.83,0-31.86,20.28-54.83,52.14-54.83,29.59,0,49.04,20.48,49.04,52.35v9.72h-74.49c1.86,17.38,10.55,26.28,26.07,26.28,13.86,0,19.04-7.24,21.93-15.52ZM475.79,89.89h46.76c-1.45-16.14-9.72-22.97-22.14-22.97-13.45,0-22.14,7.45-24.62,22.97Z"/><path d="M750.01,152.99v-63.31c0-13.66-6.62-21.1-18-21.1-13.24,0-20.48,8.9-20.48,25.45v58.97h-27.11V48.3h25.86v11.59c6-8.69,15.72-14.07,29.38-14.07,15.93,0,26.28,6.83,32.07,17.17,6-10.35,16.35-17.17,32.28-17.17,26.48,0,38.49,17.79,38.49,39.52v67.66h-27.11v-63.31c0-13.66-6.62-21.1-17.79-21.1-13.24,0-20.48,8.9-20.48,25.45v58.97h-27.1Z"/><path d="M945.95,152.99c-7.24,0-19.04-2.07-22.35-12.83-6.83,9.72-17.59,15.31-31.86,15.31-24.42,0-36.62-15.1-36.62-30.83,0-19.66,13.45-29.38,31.66-32.48l28.14-4.76c4.76-.83,6-3.52,6-6.83,0-4.76-3.1-14.07-17.38-14.07-15.1,0-19.04,9.31-20.28,15.52l-25.45-2.69c2.28-15.73,16.35-33.52,46.76-33.52s42.83,18.62,42.83,38.48v38.69c0,4.97,1.66,7.66,7.45,7.66h4.14v22.35h-13.04ZM897.12,134.78c13.66,0,24.21-10.35,24.21-25.45v-4.76l-25.86,4.14c-10.35,1.66-13.86,7.04-13.86,13.45,0,7.66,4.97,12.62,15.52,12.62Z"/><path d="M1072.79,130.44c-8.07,0-10.14-4.14-10.14-11.17v-49.24h22.55v-21.73h-22.55V16.23h-27.11v32.07h-34.55V16.23h-27.11v32.07h-16.35v21.73h16.35v53.18c0,18.83,8.69,29.79,31.66,29.79h20.28v-22.55h-14.69c-8.07,0-10.14-4.14-10.14-11.17v-49.24h34.55v53.18c0,18.83,8.69,29.79,31.66,29.79h20.28v-22.55h-14.69Z"/><path d="M1165.48,118.65l23.59,5.59c-6,22.14-24.42,31.24-45.52,31.24-34.14,0-52.76-20.69-52.76-54.83,0-31.86,20.28-54.83,52.14-54.83,29.59,0,49.04,20.48,49.04,52.35v9.72h-74.49c1.86,17.38,10.55,26.28,26.07,26.28,13.86,0,19.04-7.24,21.93-15.52ZM1117.89,89.89h46.76c-1.45-16.14-9.72-22.97-22.14-22.97-13.45,0-22.14,7.45-24.62,22.97Z"/><path d="M1231.27,48.3v16.14c6.21-10.35,15.52-16.14,27.73-16.14h8.9v24.83h-9.93c-15.93,0-25.45,10.97-25.45,34.97v44.9h-27.11V48.3h25.86Z"/><path d="M653.03,121.95c2.4-2.16,6.88-7.18,15.7-18.32l.88-1.11-17.52-17.59-1.1,1.52c-.06.08-5.86,8.05-13.92,17.15l-19.91-23.49c13.55-8.68,26.3-18.76,26.12-35.97-.2-19.05-15.72-32.87-36.91-32.87s-38.24,15.06-38.24,35.81c0,12.16,7.85,21.86,13.59,28.95l.49.6c-11.82,7.48-25.13,19.79-25.13,37.24,0,22.7,19.54,40.49,44.48,40.49,17.26,0,27.16-8.49,34.4-14.69l.05-.04,11.59,13.37h32.43l-26.99-31.05ZM593.88,46.65c0-4.72,2.67-13.64,12.77-13.64,3.66,0,6.95,1.28,9.26,3.59,2.26,2.27,3.49,5.43,3.47,8.91-.03,6.33-5.37,9.97-14.23,16-.82.56-1.67,1.14-2.54,1.73l-.73-.83c-5.65-6.39-7.99-9.04-7.99-15.77ZM596.98,93.77l24.16,28.39c-.34.27-.69.54-1.03.81-4.65,3.67-9.46,7.46-17.65,7.58-6.31.08-11.64-1.55-15.36-4.75-3.56-3.06-5.55-7.48-5.78-12.82.4-8.94,9.73-15.41,15.66-19.21Z"/></g></symbol></svg>
 
 <div id="pano"></div>
-<video id="reelVideo" class="reel-video" playsinline muted preload="auto"></video>
+<img id="stillA" class="reel-still" alt="">
+<img id="stillB" class="reel-still" alt="">
 
 <div class="topbar">
   <div class="bar-chip">
@@ -136,10 +140,13 @@
     'margriettoren': 'video/margriettoren.mp4?v=03'
   };
   var MUTE = (P.get('mute')!=='0');       // muted by default so it always autoplays; ?mute=0 for sound
+  var ZIMG = numParam('zimg', 1.18);      // still images: zoom between 1.0 and this scale
+  var STILL_MS = numParam('still', 12000);// still images stay this long (panoramas use PAN_MS)
 
   var DEF = { fovMin:30, fovMax:100, yawLimited:false, yawRange:180, pitchLimited:false, pitchUp:60, pitchDown:60 };
 
-  var panoEl=document.getElementById('pano'), videoEl=document.getElementById('reelVideo'),
+  var panoEl=document.getElementById('pano'),
+      stillA=document.getElementById('stillA'), stillB=document.getElementById('stillB'),
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
       projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
       qrcardEl=document.getElementById('qrcard'), qrImg=document.getElementById('qrImg'),
@@ -154,39 +161,65 @@
     });
   }
 
-  loadScript('tours.js').catch(function(){}).then(function(){
+  loadScript('tours.js').catch(function(){})
+    .then(function(){ return loadScript('showreel-projects.js').catch(function(){}); })
+    .then(function(){
     var tours = (window.TOURS && window.TOURS.length) ? window.TOURS : [{id:'', name:''}];
-    var defs=[];                       // [{tourTitle, def}]
+    var projects=[];                   // [{id,name,qr,scenes:[...]}]
     var chain=Promise.resolve();
+    // 1) Panorama tours (tours.js + each <id>.js). These keep their QR codes.
     tours.forEach(function(t){
       chain=chain.then(function(){
         window.TOUR=null;
         var file = t.id ? t.id+'.js' : 'config.js';
         return loadScript(file).then(function(){
           var d=window.TOUR;
-          if(d && d.scenes && d.scenes.length){ defs.push({tourId:t.id, tourTitle:(d.title||t.name||t.id), def:d}); }
-        }).catch(function(){ /* missing/broken tour file — skip it */ });
+          if(!(d && d.scenes && d.scenes.length)) return;
+          var title=(d.title||t.name||t.id);
+          var tourDef=Object.assign({}, DEF, d.settings||{});
+          var scenes=d.scenes.map(function(sc){
+            var motion = sc.motion || d.motion || MOTION[t.id] || MOTION[title] || MOTION[sc.id] || 'pan';
+            var video  = sc.video || VIDEO[t.id] || VIDEO[title] || VIDEO[sc.id] || null;
+            return { kind:(video?'video':'pano'), file:(video||sc.file), cfg:sc, motion:motion,
+                     settings:Object.assign({}, tourDef, sc.settings||{}) };
+          });
+          projects.push({ id:t.id, name:title, qr:(t.id?'qr/'+t.id+'.png':null), scenes:scenes });
+        }).catch(function(){ /* missing/broken tour file - skip it */ });
       });
     });
-    return chain.then(function(){ return defs; });
+    return chain.then(function(){
+      // 2) Still/video projects from showreel-projects.js. These have no QR code.
+      (window.SHOWREEL_PROJECTS||[]).forEach(function(p){
+        if(!p || !p.scenes || !p.scenes.length) return;
+        projects.push({ id:p.id, name:(p.name||p.id), qr:p.qr||null,
+          scenes:p.scenes.map(function(sc){
+            return { kind:(sc.type==='video'?'video':'image'), file:sc.file };
+          })});
+      });
+      // 3) Play order from SHOWREEL_ORDER; anything unlisted keeps its place at the end.
+      var byId={}; projects.forEach(function(p){ byId[p.id]=p; });
+      var out=[], seen={};
+      (window.SHOWREEL_ORDER||[]).forEach(function(id){
+        if(byId[id] && !seen[id]){ seen[id]=1; out.push(byId[id]); }
+      });
+      projects.forEach(function(p){ if(!seen[p.id]) out.push(p); });
+      return out;
+    });
   }).then(start);
 
   // ---------------------------- Build & play ----------------------------
-  function start(defs){
-    if(!defs.length){ splashDots.textContent='No panoramas found.'; return; }
+  function start(projects){
+    if(!projects.length){ splashDots.textContent='No projects found.'; return; }
 
     var viewer=new Marzipano.Viewer(panoEl,{controls:{mouseViewMode:'drag'}});
     try{ viewer.controls().disable(); }catch(e){}   // showreel is non-interactive
 
-    // Flatten tours -> a single ordered list of scene descriptors.
+    // Flatten projects -> a single ordered list of scenes.
     var items=[];
-    defs.forEach(function(entry){
-      var tourDef=Object.assign({}, DEF, entry.def.settings||{});
-      entry.def.scenes.forEach(function(sc){
-        var motion = sc.motion || entry.def.motion || MOTION[entry.tourId] || MOTION[entry.tourTitle] || MOTION[sc.id] || 'pan';
-        var video  = sc.video || VIDEO[entry.tourId] || VIDEO[entry.tourTitle] || VIDEO[sc.id] || null;
-        items.push({ tourId:entry.tourId, tourTitle:entry.tourTitle, cfg:sc, motion:motion, video:video,
-                     settings:Object.assign({}, tourDef, sc.settings||{}) });
+    projects.forEach(function(p){
+      p.scenes.forEach(function(sc){
+        items.push({ projectId:p.id, projectName:p.name, qr:p.qr, kind:sc.kind, file:sc.file,
+                     cfg:sc.cfg, motion:sc.motion, settings:sc.settings });
       });
     });
 
@@ -207,8 +240,26 @@
       return Marzipano.util.compose.apply(null,parts);
     }
 
-    // Build one Marzipano scene per item; compute its pan geometry.
+    // Every video scene gets its OWN <video>, created here and told to preload, so the
+    // clip is buffered long before its turn. Sharing one element meant each clip only
+    // started downloading when its scene began - which showed as a black screen - and the
+    // two clips kept overwriting each other on every loop.
+    function makeVideoEl(it){
+      var v=document.createElement('video');
+      v.className='reel-video';
+      v.muted=MUTE; v.defaultMuted=true; v.playsInline=true;
+      v.setAttribute('playsinline',''); v.setAttribute('muted','');
+      v.preload='auto'; v.src=it.file;
+      document.body.insertBefore(v, stillA);
+      try{ v.load(); }catch(e){}
+      it.videoEl=v;
+    }
+
+    // Build a Marzipano scene for panorama scenes (and for video scenes that have a
+    // panorama fallback). Plain image/video projects need nothing here.
     function buildItem(it, idx){
+      if(it.kind==='video') makeVideoEl(it);
+      if(it.kind==='image' || !it.cfg) return Promise.resolve(true);
       return new Promise(function(resolve){
         var img=new Image();
         img.onload=function(){
@@ -250,16 +301,17 @@
     var chain=Promise.resolve();
     items.forEach(function(it,i){
       chain=chain.then(function(){
-        splashDots.textContent='Loading panoramas… '+(i+1)+' / '+items.length;
+        splashDots.textContent='Loading… '+(i+1)+' / '+items.length;
         return buildItem(it,i).then(function(ok){ if(ok) built.push(it); });
       });
     });
     chain.then(function(){
-      if(!built.length){ splashDots.textContent='Panoramas could not be loaded.'; return; }
+      if(!built.length){ splashDots.textContent='Nothing could be loaded.'; return; }
       items=built;
       buildSegments(items.length);
-      // Start fetching the opening clip during the splash so it plays without a black gap.
-      if(items[0] && items[0].video){ try{ videoEl.src=items[0].video; videoEl.load(); }catch(e){} }
+      // Start fetching the opening scene during the splash so it appears without a gap.
+      var first=items[0];
+      if(first && first.kind==='image'){ var pre=new Image(); pre.src=first.file; }
       // Fade splash out, begin the loop.
       splashEl.classList.add('fade');
       setTimeout(function(){ splashEl.hidden=true; }, 800);
@@ -290,105 +342,160 @@
   // Missing QR file → hide the card rather than show a broken image.
   qrImg.addEventListener('error', function(){ qrcardEl.hidden=true; });
   var lastTitle=null;
-  function setProjectName(title, tourId){
-    if(title===lastTitle) return;   // scenes within one tour keep the name/QR steady (no flicker)
+  function setProjectName(title, qrSrc){
+    if(title===lastTitle) return;   // scenes within one project keep the name/QR steady (no flicker)
     lastTitle=title;
     projectNameEl.style.opacity='0';
     qrcardEl.style.opacity='0';
     setTimeout(function(){
       projectNameEl.textContent=title; projectNameEl.style.opacity='1';
-      if(tourId){ qrImg.src='qr/'+tourId+'.png'; qrcardEl.hidden=false; qrcardEl.style.opacity='1'; }
-      else { qrcardEl.hidden=true; }
+      if(qrSrc){ qrImg.src=qrSrc; qrcardEl.hidden=false; qrcardEl.style.opacity='1'; }
+      else { qrcardEl.hidden=true; }   // projects without a QR simply don't show the card
     }, 250);
   }
 
   // ------------------------------- Playback -------------------------------
+  // Three kinds of scene share one timeline:
+  //   'pano'  - a Marzipano panorama, panned or zoomed by moving the camera
+  //   'image' - a still photo/render, shown full-bleed with a slow zoom
+  //   'video' - a rendered clip, which runs for its own length
+  // Panoramas are drawn on the canvas underneath; images and video are overlays
+  // stacked above it (stills z5/z6, video z9).
   function run(list){
     var N=list.length, current=-1;
     var start=0, lastNow=0, paused=false, token=0;
-    videoEl.style.transition='opacity '+FADE_MS+'ms ease';   // same feel as the panorama cross-fades
+    var stills=[stillA, stillB], front=0;
+    var videos=list.filter(function(x){ return x.videoEl; }).map(function(x){ return x.videoEl; });
+    stills.concat(videos).forEach(function(el){ el.style.transition='opacity '+FADE_MS+'ms ease'; });
+    function pauseAllVideos(){ videos.forEach(function(v){ try{ v.pause(); }catch(e){} }); }
 
     function next(){ playScene((current+1)%N); }
-    function hideVideo(){ videoEl.classList.remove('show'); try{ videoEl.pause(); }catch(e){} }
-
-    // A rendered-video scene: the clip's own length decides how long it stays up.
-    function playVideoScene(i, it, myToken){
-      var done=false, alive=true;
-      function go(){ if(!done && myToken===token){ done=true; next(); } }
-      function fallback(){                      // missing file / blocked autoplay → pan the panorama
-        if(myToken!==token || done) return;
-        alive=false; showPano(it, FADE_MS); hideVideo(); panLoop(i, it, myToken);
-      }
-      videoEl.onended=go; videoEl.onerror=fallback;
-      videoEl.muted=MUTE;
-      var want=new URL(it.video, location.href).href;
-      if(videoEl.src!==want){ videoEl.src=it.video; }   // don't re-fetch an already-preloaded clip
-      try{ videoEl.currentTime=0; }catch(e){}
-      var pp=videoEl.play();
-      // Only real failures fall back; an AbortError (play interrupted by a seek/skip) is harmless —
-      // the loop below simply retries play().
-      if(pp&&pp.catch) pp.catch(function(e){ if(!e || e.name!=='AbortError') fallback(); });
-      videoEl.classList.add('show');
-      requestAnimationFrame(function loop(){
-        if(myToken!==token || !alive) return;
-        if(paused){ if(!videoEl.paused) videoEl.pause(); requestAnimationFrame(loop); return; }
-        if(videoEl.paused && !done){ var r=videoEl.play(); if(r&&r.catch) r.catch(function(){}); }
-        var d=videoEl.duration||0, c=videoEl.currentTime||0;
-        if(segFills[i]) segFills[i].style.width = (d?clamp(c/d,0,1):0)*100+'%';
-        requestAnimationFrame(loop);
+    function overlayVisible(){
+      return stills.concat(videos).some(function(el){ return el.classList.contains('show'); });
+    }
+    // Hide every overlay except `keep`. Called once the incoming visual is fully opaque,
+    // so the outgoing one never uncovers whatever sits beneath it.
+    function hideOverlays(keep){
+      stills.concat(videos).forEach(function(el){
+        if(el!==keep){ el.classList.remove('show'); if(el.tagName==='VIDEO'){ try{ el.pause(); }catch(e){} } }
       });
     }
+    function presentOverlay(el, z, myToken){
+      el.style.zIndex=z; el.classList.add('show');
+      setTimeout(function(){ if(myToken===token) hideOverlays(el); }, FADE_MS);
+    }
+    function showPano(it, duration){
+      it.view.setYaw(it.panFrom); it.view.setPitch(it.frontPitch); it.view.setFov(it.fovFrom);
+      it.marzScene.switchTo({transitionDuration:duration});
+    }
 
-    // A panorama scene: constant-speed pan/zoom for PAN_MS, then move on.
-    function panLoop(i, it, myToken){
+    // Shared clock: runs for durMs (+HOLD_MS), ticks onTick(t) with t going 0->1 at a
+    // constant rate, keeps the progress bar in step, honours pause, then advances.
+    // Panoramas use PAN_MS; stills use the shorter STILL_MS; videos run their own length.
+    function timedLoop(i, myToken, durMs, onTick){
       start=0; lastNow=0;
       requestAnimationFrame(function loop(now){
         if(myToken!==token) return;                 // superseded by a skip/next
         if(!start){ start=now; lastNow=now; }
         if(paused){ start+=now-lastNow; lastNow=now; requestAnimationFrame(loop); return; }
         lastNow=now;
-        var el=now-start;
-        var t=clamp(el/PAN_MS,0,1);
-        // Linear (constant-speed) motion — no easing, so nothing speeds up mid-pan.
-        it.view.setYaw(lerp(it.panFrom,it.panTo,t));
-        it.view.setPitch(it.frontPitch);
-        it.view.setFov(lerp(it.fovFrom,it.fovTo,t));
-        if(segFills[i]) segFills[i].style.width = clamp(el/(PAN_MS+HOLD_MS),0,1)*100+'%';
-        if(el < PAN_MS+HOLD_MS){ requestAnimationFrame(loop); }
-        else { next(); }                            // loop forever
+        var ms=now-start, t=clamp(ms/durMs,0,1);
+        onTick(t);
+        if(segFills[i]) segFills[i].style.width = clamp(ms/(durMs+HOLD_MS),0,1)*100+'%';
+        if(ms < durMs+HOLD_MS){ requestAnimationFrame(loop); }
+        else { next(); }
       });
     }
 
-    function showPano(it, duration){
-      it.view.setYaw(it.panFrom); it.view.setPitch(it.frontPitch); it.view.setFov(it.fovFrom);
-      it.marzScene.switchTo({transitionDuration:duration});
+    // --- panorama: constant-speed pan or zoom of the camera ---
+    function playPanoScene(i, it, myToken){
+      timedLoop(i, myToken, PAN_MS, function(t){
+        it.view.setYaw(lerp(it.panFrom,it.panTo,t));
+        it.view.setPitch(it.frontPitch);
+        it.view.setFov(lerp(it.fovFrom,it.fovTo,t));
+      });
+    }
+
+    // --- still image: full-bleed, slowly zooming in or out (alternating) ---
+    function playImageScene(i, it, myToken){
+      front=1-front;
+      var el=stills[front], other=stills[1-front];
+      other.style.zIndex=5;
+      el.onerror=function(){ if(myToken===token) next(); };       // missing file -> move on
+      if(el.getAttribute('src')!==it.file){ el.setAttribute('src', it.file); }
+      var zoomIn=(i%2===0);
+      var zFrom=zoomIn?1:ZIMG, zTo=zoomIn?ZIMG:1;
+      el.style.transform='scale('+zFrom+')';
+      presentOverlay(el, 6, myToken);
+      timedLoop(i, myToken, STILL_MS, function(t){ el.style.transform='scale('+lerp(zFrom,zTo,t)+')'; });
+    }
+
+    // --- rendered video: the clip's own length decides how long it stays up ---
+    function playVideoScene(i, it, myToken){
+      var v=it.videoEl;
+      if(!v){ next(); return; }
+      var done=false, alive=true;
+      function go(){ if(!done && myToken===token){ done=true; next(); } }
+      function fallback(){                       // can't play -> panorama if there is one, else skip
+        if(myToken!==token || done) return;
+        alive=false;
+        if(it.marzScene){ showPano(it, FADE_MS); hideOverlays(null); playPanoScene(i, it, myToken); }
+        else { done=true; next(); }
+      }
+      v.onended=go; v.onerror=fallback;
+      v.muted=MUTE;
+      try{ v.currentTime=0; }catch(e){}
+      var pp=v.play();
+      // Only real failures fall back; an AbortError (play interrupted by a seek/skip) is harmless -
+      // the loop below simply retries play().
+      if(pp&&pp.catch) pp.catch(function(e){ if(!e || e.name!=='AbortError') fallback(); });
+      // Only fade the clip in once it actually has a frame, so we never cross-fade onto
+      // black while it buffers; the previous scene stays up until then.
+      function reveal(){ if(myToken===token) presentOverlay(v, 9, myToken); }
+      if(v.readyState>=2){ reveal(); }
+      else {
+        var guard=setTimeout(reveal, 5000);      // don't hold the reel forever on a slow link
+        v.addEventListener('loadeddata', function once(){
+          v.removeEventListener('loadeddata', once); clearTimeout(guard); reveal();
+        });
+      }
+      requestAnimationFrame(function loop(){
+        if(myToken!==token || !alive) return;
+        if(paused){ if(!v.paused) v.pause(); requestAnimationFrame(loop); return; }
+        if(v.paused && !done){ var r=v.play(); if(r&&r.catch) r.catch(function(){}); }
+        var d=v.duration||0, c=v.currentTime||0;
+        if(segFills[i]) segFills[i].style.width = (d?clamp(c/d,0,1):0)*100+'%';
+        requestAnimationFrame(loop);
+      });
+    }
+
+    // Warm the next scene so it is ready the moment it is needed.
+    function preloadNext(i){
+      var nx=list[(i+1)%N];
+      if(nx && nx.kind==='image'){ var im=new Image(); im.src=nx.file; }
     }
 
     function playScene(i){
       current=i; token++; var myToken=token;
       var it=list[i];
-      var fromVideo=videoEl.classList.contains('show');
-      setProjectName(it.tourTitle, it.tourId);
+      setProjectName(it.projectName, it.qr);
       setSegFills(i);
-      if(it.video){
-        // Don't park this scene's panorama under the video — it would flash through at its
-        // wide starting angle during the transitions. It's only brought in on fallback.
-        playVideoScene(i, it, myToken);
-        return;
-      }
-      // Leaving a video: place the next panorama instantly *behind* the still-opaque video,
-      // then let the video fade out over it — so nothing else shows through the transition.
-      showPano(it, fromVideo ? 0 : FADE_MS);
-      hideVideo();
-      panLoop(i, it, myToken);
+      preloadNext(i);
+      if(it.kind==='video'){ playVideoScene(i, it, myToken); return; }
+      if(it.kind==='image'){ playImageScene(i, it, myToken); return; }
+      // Panorama: if an overlay is covering the screen, put the panorama in place instantly
+      // behind it and let the overlay fade away over it, so nothing flashes through.
+      showPano(it, overlayVisible() ? 0 : FADE_MS);
+      hideOverlays(null);
+      playPanoScene(i, it, myToken);
     }
 
     jumpTo=function(i){ paused=false; pausedBadge.classList.remove('show'); playScene(i); };
 
-    // Controls (optional — handy for testing / manual kiosks)
+    // Controls (optional - handy for testing / manual kiosks)
     document.addEventListener('keydown',function(ev){
       if(ev.key===' '){ ev.preventDefault(); paused=!paused; pausedBadge.classList.toggle('show',paused);
-                        if(paused){ try{ videoEl.pause(); }catch(e){} } }
+                        if(paused){ pauseAllVideos(); } }
       else if(ev.key==='ArrowRight'){ jumpTo((current+1)%N); }
       else if(ev.key==='ArrowLeft'){ jumpTo((current-1+N)%N); }
       else if(ev.key==='f'||ev.key==='F'){ toggleFullscreen(); }
