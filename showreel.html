@@ -254,7 +254,9 @@
             var own=existing.scenes;
             existing.scenes=p.scenes.map(function(sc){
               if(sc.type!=='pano') return mapScene(sc);
-              return own.filter(function(x){ return x.cfg && x.cfg.id===sc.scene; })[0] || null;
+              var pano=own.filter(function(x){ return x.cfg && x.cfg.id===sc.scene; })[0] || null;
+              if(pano && sc.turn) pano.turn=sc.turn;     // 'right' = sweep left->right, 'left' = right->left
+              return pano;
             }).filter(Boolean);
           } else {
             existing.scenes=existing.scenes.concat(p.scenes.map(mapScene));
@@ -298,7 +300,7 @@
       p.scenes.forEach(function(sc){
         items.push({ projectId:p.id, projectName:p.name, qr:p.qr, kind:sc.kind, file:sc.file,
                      cfg:sc.cfg, motion:sc.motion, settings:sc.settings, panSpeed:sc.panSpeed,
-                     focus:sc.focus, zoom:sc.zoom, scale:sc.scale, stepped:sc.stepped });
+                     focus:sc.focus, zoom:sc.zoom, scale:sc.scale, stepped:sc.stepped, turn:sc.turn });
       });
     });
     // Closing card with the logo - always the final scene before the loop starts again.
@@ -377,7 +379,9 @@
             var half = S.yawLimited ? deg(S.yawRange)/2*0.92 : deg(55);
             // speed cap (deg/s at normal pace; divided by SLOW so the arc stays the same and only the speed drops)
             if(it.panSpeed){ half=Math.min(half, deg(it.panSpeed/SLOW*PAN_MS/1000)/2); }
-            var dir  = (idx%2===0)?1:-1;
+            // Direction alternates by reel position unless the scene sets turn:'right'|'left'
+            // (+yaw = camera turns right, so 'right' sweeps from the left side to the right).
+            var dir  = it.turn==='right' ? 1 : it.turn==='left' ? -1 : ((idx%2===0)?1:-1);
             var fovStart = clamp(70, S.fovMin, S.fovMax);
             var fovEnd   = clamp(fovStart-ZOOM, S.fovMin, S.fovMax);   // gentle push-in
             it.panFrom=frontYaw-dir*half; it.panTo=frontYaw+dir*half;

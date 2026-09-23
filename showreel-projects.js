@@ -35,6 +35,7 @@ window.SHOWREEL_PROJECTS = [
   ] },
   { id:"e-buurt", name:"E-buurt", scenes:[
       { type:"image", file:"stills/e-buurt-01.webp" },
+      { type:"image", file:"stills/e-buurt-02.webp" },          // "E-buurt - daktuin.png"
   ] },
   // Edisonweg plays LAST, right before the closing clip (which is its video) - see SHOWREEL_CLOSING.
   // Render: "Upscale A2 superzoom.jpg".
@@ -44,6 +45,7 @@ window.SHOWREEL_PROJECTS = [
   { id:"lincolnpark", name:"Lincolnpark", scenes:[
       { type:"image", file:"stills/lincolnpark-01.webp" },
       { type:"image", file:"stills/lincolnpark-02.webp" },
+      { type:"image", file:"stills/lincolnpark-03.webp" },      // "1_500 voorstel.jpg" (model photo)
   ] },
   { id:"schiphol-c-pier", name:"Schiphol C-Pier", scenes:[
       { type:"image", file:"stills/schiphol-c-pier-01.webp", zoom:"out" },
@@ -52,6 +54,7 @@ window.SHOWREEL_PROJECTS = [
   { id:"strandeiland", name:"Strandeiland", scenes:[
       { type:"image", file:"stills/strandeiland-01.webp", zoom:"out" },
       { type:"image", file:"stills/strandeiland-02.webp", zoom:"in" },
+      { type:"image", file:"stills/strandeiland-03.webp", zoom:"out" },   // "Strandeiland 06.jpg" (model photo)
   ] },
   { id:"wittenborg", name:"Wittenborg", scenes:[
       // Starts already zoomed in so the Gemini mark (bottom-right) is never on screen;
@@ -65,10 +68,11 @@ window.SHOWREEL_PROJECTS = [
   ] },
   // Slotlaan, Zeist panorama tour - showreel sequence: the Slotlaan model photo replaces the
   // second panorama (zeist-panorama-01). The QR tour still has all three panoramas.
+  // turn:"right"|"left" fixes a panorama's sweep direction (otherwise it alternates by position).
   { id:"zeist", scenes:[
       { type:"pano",  scene:"zeist-panorama-03" },
       { type:"image", file:"stills/zeist-slotlaan-01.webp" },
-      { type:"pano",  scene:"zeist-panorama-02" },
+      { type:"pano",  scene:"zeist-panorama-02", turn:"right" },   // sweeps left -> right
   ] },
   { id:"delft-veld-6-7", name:"Delft veld 6.7", scenes:[
       { type:"image", file:"stills/delft-veld-6-7-01.webp" },
@@ -85,6 +89,7 @@ window.SHOWREEL_PROJECTS = [
       { type:"image", file:"stills/kavel17-3-02.webp", zoom:"in", focus:"55% 90%" },
   ] },
   { id:"silo", name:"SILO", scenes:[
+      { type:"image", file:"stills/silo-01.webp" },             // "Deventer Silo - View 02.jpg"
       { type:"video", file:"video/silo.mp4" },
   ] },
 ];
@@ -116,6 +121,6 @@ window.SHOWREEL_ORDER = [
    (Old image closer: set image:"stills/closing.webp" and drop `video` - white logo on black.) */
 window.SHOWREEL_CLOSING = {
   project: "edisonweg",         // the clip is Edisonweg's (name box shows "Edisonweg")
-  video: "video/closing.mp4",   // MVI_5342.MP4 with the first 3 s cut (38 s, 1440p)
+  video: "video/closing.mp4?v=2",   // MVI_5342.MP4 minus the first 3 s and the last 1 s (37.1 s, 1440p)
   logoSlides: 0.9,              // logo on white ~0.9 x a still's duration (~22 s at the default pace)
 };
