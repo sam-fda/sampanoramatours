@@ -224,9 +224,9 @@
     return chain.then(function(){
       // 2) Still/video projects from showreel-projects.js. These have no QR code - unless the
       //    entry shares its id with a panorama tour. Then it keeps the tour's name and QR, and:
-      //     - if it lists { type:"pano", scene:"<scene id>" } entries, it is the tour's COMPLETE
-      //       sequence for the showreel (tour scenes not listed are left out of the reel only;
-      //       the QR tour itself is unchanged);
+      //     - if it lists { type:"pano", scene:"<scene id>" } entries, or sets sequence:true, it
+      //       is the tour's COMPLETE sequence for the showreel (tour scenes not listed are left
+      //       out of the reel only; the QR tour itself is unchanged);
       //     - otherwise its scenes are APPENDED after the tour's own scenes.
       function mapScene(sc){
         return { kind:(sc.type==='video'?'video':'image'), file:sc.file,
@@ -237,7 +237,7 @@
         var existing=projects.filter(function(q){ return q.id===p.id; })[0];
         if(existing){
           if(p.name) existing.name=p.name;            // showreel name wins over the tour title
-          var isSequence=p.scenes.some(function(sc){ return sc.type==='pano'; });
+          var isSequence=!!p.sequence || p.scenes.some(function(sc){ return sc.type==='pano'; });
           if(isSequence){
             var own=existing.scenes;
             existing.scenes=p.scenes.map(function(sc){

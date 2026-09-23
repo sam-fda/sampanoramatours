@@ -73,13 +73,15 @@ window.SHOWREEL_PROJECTS = [
       { type:"image", file:"stills/delft-veld-6-7-01.webp" },
       { type:"video", file:"video/delft-veld-6-7.mp4" },
   ] },
-  // Kavel 17.3 - shares its id with the "kavel17-3" panorama tour, so these stills are APPENDED
-  // after the tour's panorama (pano -> 01 -> 02) and the project shows its QR code. To put the
-  // panorama elsewhere, list it as { type:"pano", scene:"kavel173-panorama-01" } in the order you
-  // want. Corner view: CMYK print file, colour-managed to sRGB.
-  { id:"kavel17-3", name:"Kavel 17.3", scenes:[
-      { type:"image", file:"stills/kavel17-3-01.webp", zoom:"out", focus:"44% 50%" },
-      { type:"image", file:"stills/kavel17-3-02.webp", zoom:"in",  focus:"55% 90%" },
+  // Kavel 17.3 - shares its id with the "kavel17-3" panorama tour, so it shows that tour's QR
+  // code. sequence:true = these scenes are the project's whole showreel sequence: the Enscape
+  // render stands in for the panorama (the QR tour itself still has the panorama).
+  // Corner view (01): Photoshop Generative Expand to 16:9 of the CMYK print file, colour-managed
+  // (U.S. Web Coated SWOP v2) to sRGB; zooms in on the ground floor.
+  { id:"kavel17-3", name:"Kavel 17.3", sequence:true, scenes:[
+      { type:"image", file:"stills/kavel17-3-render.webp", zoom:"in" },
+      { type:"image", file:"stills/kavel17-3-01.webp?v=2", zoom:"in", focus:"46% 92%" },
+      { type:"image", file:"stills/kavel17-3-02.webp", zoom:"in", focus:"55% 90%" },
   ] },
   { id:"silo", name:"SILO", scenes:[
       { type:"video", file:"video/silo.mp4" },
