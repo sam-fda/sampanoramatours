@@ -13,7 +13,7 @@
      zoom:  "in"|"out" force the direction (default alternates in/out along the reel). */
 window.SHOWREEL_PROJECTS = [
   { id:"blok-16", name:"Blok 16", scenes:[
-      { type:"image", file:"stills/blok-16-01.webp", focus:"50% 75%", zoom:"in" },
+      { type:"image", file:"stills/blok-16-01.webp", focus:"50% 90%", zoom:"in" },
       { type:"image", file:"stills/blok-16-02.webp", zoom:"out" },
       { type:"image", file:"stills/blok-16-03.webp", zoom:"in" },
   ] },
@@ -25,19 +25,19 @@ window.SHOWREEL_PROJECTS = [
       { type:"image", file:"stills/e-buurt-01.webp" },
   ] },
   { id:"edisonweg", name:"Edisonweg", scenes:[
-      { type:"image", file:"stills/edisonweg-01.webp" },
+      { type:"image", file:"stills/edisonweg-01.webp", focus:"50% 95%", zoom:"in" },
   ] },
   { id:"lincolnpark", name:"Lincolnpark", scenes:[
       { type:"image", file:"stills/lincolnpark-01.webp" },
       { type:"image", file:"stills/lincolnpark-02.webp" },
   ] },
   { id:"schiphol-c-pier", name:"Schiphol C-Pier", scenes:[
-      { type:"image", file:"stills/schiphol-c-pier-01.webp" },
-      { type:"image", file:"stills/schiphol-c-pier-02.webp" },
+      { type:"image", file:"stills/schiphol-c-pier-01.webp", zoom:"out" },
+      { type:"image", file:"stills/schiphol-c-pier-02.webp", zoom:"in" },
   ] },
   { id:"strandeiland", name:"Strandeiland", scenes:[
-      { type:"image", file:"stills/strandeiland-01.webp" },
-      { type:"image", file:"stills/strandeiland-02.webp" },
+      { type:"image", file:"stills/strandeiland-01.webp", zoom:"out" },
+      { type:"image", file:"stills/strandeiland-02.webp", zoom:"in" },
   ] },
   { id:"wittenborg", name:"Wittenborg", scenes:[
       { type:"image", file:"stills/wittenborg-01.webp" },

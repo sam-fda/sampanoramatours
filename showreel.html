@@ -32,7 +32,10 @@
   .logo-link:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .logo{height:17px;width:auto;color:var(--ink);display:block;align-self:center;}
   .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
-  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;transition:opacity .35s ease;}
+  /* Project name: slow fade-in (1.5s, same as the image cross-fade), quicker fade-out (.8s).
+     A CSS transition uses the timing of the state it is heading INTO, hence two rules. */
+  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;opacity:1;transition:opacity 1.5s ease-in-out;}
+  .proj-current.out{opacity:0;transition:opacity .8s ease-in-out;}
 
   /* Fullscreen button, top-right */
   .top-full{margin-left:auto;pointer-events:auto;-webkit-appearance:none;appearance:none;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);transition:background .15s ease,border-color .15s ease,transform .05s ease;}
@@ -44,9 +47,9 @@
   /* Per-project QR card, below the logo/name chip (top-left) */
   /* Hidden = transparent + visibility:hidden (not display:none), so it can fade both ways.
      visibility flips only after the fade-out finishes, and immediately on fade-in.
-     Fade-out is quick (.35s, must finish before the swap); fade-in is slower (.9s). */
-  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s;}
-  .qrcard.show{opacity:1;visibility:visible;transition:opacity .9s ease-in-out,visibility 0s;}   /* slow, soft fade-in */
+     Same timing as the project name: fade-out .8s (must finish before the swap), fade-in 1.5s. */
+  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity .8s ease-in-out,visibility 0s linear .8s;}
+  .qrcard.show{opacity:1;visibility:visible;transition:opacity 1.5s ease-in-out,visibility 0s;}
   .qrcard img{width:100%;height:auto;display:block;}
   .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
 
@@ -132,6 +135,13 @@
   var MOTION = {
     'margriettoren': 'zoom'
   };
+  // Optional speed cap for panorama pans, in degrees per second. The scene keeps its length
+  // (PAN_MS) but sweeps a narrower arc centred on the front view, so it turns more slowly.
+  // At PAN_MS 18s, uncapped: CCH turns ~4.6-6 deg/s, Zeist ~7-10 deg/s (its arcs are wide).
+  // Key by tour id, tour title, or scene id.
+  var PAN_SPEED = {
+    'zeist': 5
+  };
   var ZWIDE   = numParam('zwide', 82);    // zoom-mode: starting (wide) FOV, degrees
   var ZOOMIN  = numParam('zoomin', 36);   // zoom-mode: how far to push in, degrees of FOV
 
@@ -183,7 +193,8 @@
           var scenes=d.scenes.map(function(sc){
             var motion = sc.motion || d.motion || MOTION[t.id] || MOTION[title] || MOTION[sc.id] || 'pan';
             var video  = sc.video || VIDEO[t.id] || VIDEO[title] || VIDEO[sc.id] || null;
-            return { kind:(video?'video':'pano'), file:(video||sc.file), cfg:sc, motion:motion,
+            var panSpeed = sc.panSpeed || d.panSpeed || PAN_SPEED[t.id] || PAN_SPEED[title] || PAN_SPEED[sc.id] || 0;
+            return { kind:(video?'video':'pano'), file:(video||sc.file), cfg:sc, motion:motion, panSpeed:panSpeed,
                      settings:Object.assign({}, tourDef, sc.settings||{}) };
           });
           projects.push({ id:t.id, name:title, qr:(t.id?'qr/'+t.id+'.png':null), scenes:scenes });
@@ -225,7 +236,7 @@
     projects.forEach(function(p){
       p.scenes.forEach(function(sc){
         items.push({ projectId:p.id, projectName:p.name, qr:p.qr, kind:sc.kind, file:sc.file,
-                     cfg:sc.cfg, motion:sc.motion, settings:sc.settings,
+                     cfg:sc.cfg, motion:sc.motion, settings:sc.settings, panSpeed:sc.panSpeed,
                      focus:sc.focus, zoom:sc.zoom });
       });
     });
@@ -290,6 +301,7 @@
             // Slow yaw sweep across (an inset of) the allowed arc, alternating direction,
             // with a gentle push-in.
             var half = S.yawLimited ? deg(S.yawRange)/2*0.92 : deg(55);
+            if(it.panSpeed){ half=Math.min(half, deg(it.panSpeed*PAN_MS/1000)/2); }   // speed cap
             var dir  = (idx%2===0)?1:-1;
             var fovStart = clamp(70, S.fovMin, S.fovMax);
             var fovEnd   = clamp(fovStart-ZOOM, S.fovMin, S.fovMax);   // gentle push-in
@@ -351,15 +363,15 @@
   var lastTitle=null;
   // Name and QR card fade out together, swap while invisible, then fade back in together.
   // A project without a QR simply leaves the card faded out.
-  var SWAP_MS=350;                   // matches the .35s opacity transitions in the CSS
+  var SWAP_MS=800;                   // = the .8s fade-out in the CSS; the swap happens once it's invisible
   function setProjectName(title, qrSrc){
     if(title===lastTitle) return;   // scenes within one project keep the name/QR steady (no flicker)
     lastTitle=title;
-    projectNameEl.style.opacity='0';
+    projectNameEl.classList.add('out');
     qrcardEl.classList.remove('show');
     setTimeout(function(){
       if(lastTitle!==title) return;  // superseded by a quicker project change
-      projectNameEl.textContent=title; projectNameEl.style.opacity='1';
+      projectNameEl.textContent=title; projectNameEl.classList.remove('out');
       if(!qrSrc) return;
       function showCard(){ if(lastTitle===title) qrcardEl.classList.add('show'); }
       if(qrImg.getAttribute('src')===qrSrc && qrImg.complete){ showCard(); return; }
@@ -399,12 +411,11 @@
       setTimeout(function(){ if(myToken===token) hideOverlays(el); }, FADE_MS);
     }
     // The name/QR must not run ahead of the picture. Scenes reveal at different moments
-    // (a video waits until it has a frame), so the announcement is tied to the reveal and
-    // lands part-way through the cross-fade, as the new visual becomes the dominant one.
+    // (a video waits until it has a frame), so this is called at the reveal itself: the old
+    // name fades out alongside the outgoing picture, and the new one fades in (after the
+    // .8s swap) while the new picture fades up.
     function announce(it, myToken){
-      setTimeout(function(){
-        if(myToken===token) setProjectName(it.projectName, it.qr);
-      }, Math.round(FADE_MS*0.45));
+      if(myToken===token) setProjectName(it.projectName, it.qr);
     }
 
     function showPano(it, duration){
