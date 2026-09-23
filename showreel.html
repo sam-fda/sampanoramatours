@@ -31,6 +31,16 @@
   .reel-closing.show{opacity:1;}
   .closing-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transform-origin:58% 48%;will-change:transform,opacity;}   /* zoom aims at the model */
   .closing-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(54vw,1650px);height:auto;aspect-ratio:1280/200;color:#fff;opacity:0;display:block;}
+  /* Video closer: the clip plays over white, the BLACK logo fades in during it (in the empty
+     wall above the model - centred it would sit on the dark model), then the clip fades out to
+     white while the logo glides to the centre and stays there on its own. */
+  .closing-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;display:none;}
+  .reel-closing.light{background:#fff;}
+  .reel-closing.light .closing-img{display:none;}
+  .reel-closing.light .closing-vid{display:block;}
+  .reel-closing.light .closing-logo{color:#000;width:min(44vw,1350px);}   /* top is set by the script */
+  body.closing-light .seg{background:rgba(25,25,25,.16);box-shadow:none;}   /* progress bars readable on white */
+  body.closing-light .seg .fill{background:#191919;}
 
   /* Persistent logo chip, top-left */
   .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;gap:14px;padding:20px 22px;pointer-events:none;}
@@ -94,6 +104,7 @@
 <img id="stillB" class="reel-still" alt="">
 <div id="closing" class="reel-closing" aria-hidden="true">
   <img id="closingImg" class="closing-img" alt="">
+  <video id="closingVid" class="closing-vid" muted playsinline preload="auto"></video>
   <svg id="closingLogo" class="closing-logo" viewBox="0 0 1280 200" role="img" aria-label="space&amp;matter"><use href="#sm-logo"/></svg>
 </div>
 
@@ -179,7 +190,7 @@
   var panoEl=document.getElementById('pano'),
       stillA=document.getElementById('stillA'), stillB=document.getElementById('stillB'),
       closingEl=document.getElementById('closing'), closingImg=document.getElementById('closingImg'),
-      closingLogo=document.getElementById('closingLogo'),
+      closingLogo=document.getElementById('closingLogo'), closingVid=document.getElementById('closingVid'),
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
       projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
       qrcardEl=document.getElementById('qrcard'), qrImg=document.getElementById('qrImg'),
@@ -282,7 +293,13 @@
     });
     // Closing card with the logo - always the final scene before the loop starts again.
     var C=window.SHOWREEL_CLOSING;
-    if(C && C.image){
+    if(C && C.video){
+      items.push({ projectId:'closing', projectName:'', qr:null, kind:'closing', file:C.video, video:true,
+                   logoAt:(C.logoAt!=null?C.logoAt:0), logoHold:(C.logoHold!=null?C.logoHold:3),
+                   logoTop:(C.logoTop!=null?C.logoTop:50) });
+      closingVid.muted=true; closingVid.defaultMuted=true; closingVid.playsInline=true;
+      closingVid.src=C.video; try{ closingVid.load(); }catch(e){}   // preload, like the other clips
+    } else if(C && C.image){
       items.push({ projectId:'closing', projectName:'', qr:null, kind:'closing', file:C.image });
       var pc=new Image(); pc.src=C.image;
     }
@@ -444,7 +461,7 @@
     var videos=list.filter(function(x){ return x.videoEl; }).map(function(x){ return x.videoEl; });
     var overlays=stills.concat(videos).concat([closingEl]);   // everything that sits above the panorama
     overlays.forEach(function(el){ el.style.transition='opacity '+FADE_MS+'ms ease'; });
-    function pauseAllVideos(){ videos.forEach(function(v){ try{ v.pause(); }catch(e){} }); }
+    function pauseAllVideos(){ videos.concat([closingVid]).forEach(function(v){ try{ v.pause(); }catch(e){} }); }
 
     function next(){ playScene((current+1)%N); }
     function overlayVisible(){
@@ -454,7 +471,8 @@
     // so the outgoing one never uncovers whatever sits beneath it.
     function hideOverlays(keep){
       overlays.forEach(function(el){
-        if(el!==keep){ el.classList.remove('show'); if(el.tagName==='VIDEO'){ try{ el.pause(); }catch(e){} } }
+        if(el!==keep){ el.classList.remove('show'); if(el.tagName==='VIDEO'){ try{ el.pause(); }catch(e){} }
+                       if(el===closingEl){ try{ closingVid.pause(); }catch(e){} } }
       });
     }
     function presentOverlay(el, z, myToken){
@@ -587,6 +605,8 @@
     //     logo fades out, then the loop starts again from black. All timings follow SLOW.
     function smooth(x){ x=clamp(x,0,1); return x*x*(3-2*x); }
     function playClosingScene(i, it, myToken){
+      closingEl.classList.remove('light'); document.body.classList.remove('closing-light');
+      closingLogo.style.top='';
       if(closingImg.getAttribute('src')!==it.file) closingImg.setAttribute('src', it.file);
       closingImg.style.opacity='1'; closingLogo.style.opacity='0'; closingImg.style.transform='scale(1)';
       document.body.classList.add('closing');            // hide the logo box top-left
@@ -607,6 +627,55 @@
       });
     }
 
+    // --- video closer: the clip fades in over the last scene and plays at its own speed; the
+    //     black logo fades in at `logoAt` seconds of CLIP time (so it stays in sync even if the
+    //     clip stalls). When the clip ends it fades out to white, the logo stays on its own for
+    //     `logoHold` s (x SLOW), fades out, and after a short white beat the loop starts again.
+    function playClosingVideo(i, it, myToken){
+      var v=closingVid;
+      closingEl.classList.add('light');
+      document.body.classList.add('closing','closing-light');   // hide the logo box; dark progress bars
+      v.style.opacity='1'; closingLogo.style.opacity='0'; closingLogo.style.top=it.logoTop+'%';
+      var LOGO_FADE=1500*SLOW;
+      var logoOut=FADE_MS + it.logoHold*1000*SLOW;              // after the clip ends
+      var tail=logoOut + LOGO_FADE + 500*SLOW;
+      var revealed=false, ended=false, tailMs=0, last=0, logoAtEnd=1;
+      function reveal(){
+        if(revealed || myToken!==token) return;
+        revealed=true; presentOverlay(closingEl, 11, myToken); announce(it, myToken);   // (no name, no QR)
+      }
+      function finish(){ if(!ended){ ended=true; logoAtEnd=Math.max(parseFloat(closingLogo.style.opacity)||0, 0); } }
+      function fail(){ if(myToken!==token) return; logoAtEnd=1; reveal(); ended=true; }   // no clip -> logo on white
+      v.onended=function(){ if(myToken===token) finish(); };
+      v.onerror=fail;
+      try{ v.currentTime=0; }catch(e){}
+      var pp=v.play(); if(pp&&pp.catch) pp.catch(function(e){ if(!e || e.name!=='AbortError') fail(); });
+      if(v.readyState>=2 && !v.seeking) reveal();
+      else if(typeof v.requestVideoFrameCallback==='function') v.requestVideoFrameCallback(function(){ reveal(); });
+      else v.addEventListener('playing', function once(){ v.removeEventListener('playing', once); reveal(); });
+      setTimeout(reveal, 3000);                                  // safety net
+      requestAnimationFrame(function loop(now){
+        if(myToken!==token) return;                              // skipped / superseded
+        var dt=last ? now-last : 0; last=now;
+        var dMs=(v.duration && isFinite(v.duration)) ? v.duration*1000 : 0;
+        if(!ended){
+          if(paused){ if(!v.paused) v.pause(); requestAnimationFrame(loop); return; }
+          if(v.paused && revealed){ var r=v.play(); if(r&&r.catch) r.catch(function(){}); }
+          var cMs=(v.currentTime||0)*1000;
+          closingLogo.style.opacity=String(smooth((cMs-it.logoAt*1000)/LOGO_FADE));
+          if(segFills[i] && dMs) segFills[i].style.width=clamp(cMs/(dMs+tail),0,1)*100+'%';
+          requestAnimationFrame(loop); return;
+        }
+        if(!paused) tailMs+=dt;
+        v.style.opacity=String(1-smooth(tailMs/FADE_MS));                        // clip -> white
+        closingLogo.style.top=(it.logoTop+(50-it.logoTop)*smooth(tailMs/FADE_MS))+'%';   // ...logo to centre
+        var logoIn=Math.max(logoAtEnd, smooth(tailMs/LOGO_FADE));                  // make sure it is in
+        closingLogo.style.opacity=String(logoIn * (1-smooth((tailMs-logoOut)/LOGO_FADE)));
+        if(segFills[i]) segFills[i].style.width=clamp((dMs+tailMs)/(dMs+tail),0,1)*100+'%';
+        if(tailMs<tail) requestAnimationFrame(loop); else next();
+      });
+    }
+
     // Warm the next scene so it is ready the moment it is needed.
     function preloadNext(i){
       var nx=list[(i+1)%N];
@@ -618,10 +687,10 @@
       var it=list[i];
       setSegFills(i);
       preloadNext(i);
-      if(it.kind==='closing'){ playClosingScene(i, it, myToken); return; }
+      if(it.kind==='closing'){ (it.video ? playClosingVideo : playClosingScene)(i, it, myToken); return; }
       // Leaving the closing card: bring the logo box back as the new name fades in.
       if(document.body.classList.contains('closing')){
-        setTimeout(function(){ if(myToken===token) document.body.classList.remove('closing'); }, SWAP_MS);
+        setTimeout(function(){ if(myToken===token) document.body.classList.remove('closing','closing-light'); }, SWAP_MS);
       }
       if(it.kind==='video'){ playVideoScene(i, it, myToken); return; }
       if(it.kind==='image'){ playImageScene(i, it, myToken); return; }

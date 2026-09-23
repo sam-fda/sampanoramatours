@@ -107,9 +107,16 @@ window.SHOWREEL_ORDER = [
   "delft-veld-6-7",
 ];
 
-/* Closing card, played after the last project before the reel loops. No logo box, no QR:
-   the image fades in, then the white logo; the image fades to black while the logo stays;
-   then the logo fades out and the first project fades in. */
+/* Closing card, played after the last project before the reel loops. No logo box, no QR.
+   VIDEO closer (current): the clip fades in over the last project and plays at its own speed;
+   the BLACK logo fades in at `logoAt` seconds into the clip, centred on `logoTop` % from the top
+   (the empty wall above the model); when the clip ends it fades out to white while the logo
+   glides to the centre, stays alone for `logoHold` s (doubled by the reel's SLOW factor), then
+   fades out and the first project fades in.
+   (Old image closer: set image:"stills/closing.webp" and drop `video` - white logo on black.) */
 window.SHOWREEL_CLOSING = {
-  image: "stills/closing.webp",   // cropped to 16:9 around the model (no sign, fruit or people)
+  video: "video/closing.mp4",   // MVI_5342.MP4 with the first 3 s cut (38 s, 1440p)
+  logoAt: 16,                   // = 0:19 in the original clip
+  logoTop: 12.5,                // % from the top while the clip plays (50 = centre)
+  logoHold: 3,                  // x SLOW (2) = ~6 s of logo alone on white after the fade
 };
