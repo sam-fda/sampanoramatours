@@ -79,8 +79,8 @@ window.SHOWREEL_PROJECTS = [
   // Corner view (01): Photoshop Generative Expand to 16:9 of the CMYK print file, colour-managed
   // (U.S. Web Coated SWOP v2) to sRGB; zooms in on the ground floor.
   { id:"kavel17-3", name:"Kavel 17.3", sequence:true, scenes:[
-      { type:"image", file:"stills/kavel17-3-render.webp", zoom:"in" },
       { type:"image", file:"stills/kavel17-3-01.webp?v=2", zoom:"in", focus:"46% 92%" },
+      { type:"image", file:"stills/kavel17-3-render.webp", zoom:"out" },
       { type:"image", file:"stills/kavel17-3-02.webp", zoom:"in", focus:"55% 90%" },
   ] },
   { id:"silo", name:"SILO", scenes:[
