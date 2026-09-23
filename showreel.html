@@ -32,7 +32,7 @@
   .logo-link:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .logo{height:17px;width:auto;color:var(--ink);display:block;align-self:center;}
   .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
-  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;transition:opacity .5s ease;}
+  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;transition:opacity .35s ease;}
 
   /* Fullscreen button, top-right */
   .top-full{margin-left:auto;pointer-events:auto;-webkit-appearance:none;appearance:none;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);transition:background .15s ease,border-color .15s ease,transform .05s ease;}
@@ -42,8 +42,11 @@
   .top-full svg{width:18px;height:18px;display:block;}
 
   /* Per-project QR card, below the logo/name chip (top-left) */
-  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);transition:opacity .5s ease;}
-  .qrcard[hidden]{display:none;}
+  /* Hidden = transparent + visibility:hidden (not display:none), so it can fade both ways.
+     visibility flips only after the fade-out finishes, and immediately on fade-in.
+     Fade-out is quick (.35s, must finish before the swap); fade-in is slower (.9s). */
+  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s;}
+  .qrcard.show{opacity:1;visibility:visible;transition:opacity .9s ease-in-out,visibility 0s;}   /* slow, soft fade-in */
   .qrcard img{width:100%;height:auto;display:block;}
   .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
 
@@ -89,7 +92,7 @@
   <button class="top-full" id="fsBtn" type="button" title="Fullscreen" aria-label="Toggle fullscreen"></button>
 </div>
 
-<div class="qrcard" id="qrcard" hidden>
+<div class="qrcard" id="qrcard">
   <img id="qrImg" alt="QR code — scan to explore this project">
   <div class="qr-label">Scan to explore</div>
 </div>
@@ -193,7 +196,8 @@
         if(!p || !p.scenes || !p.scenes.length) return;
         projects.push({ id:p.id, name:(p.name||p.id), qr:p.qr||null,
           scenes:p.scenes.map(function(sc){
-            return { kind:(sc.type==='video'?'video':'image'), file:sc.file };
+            return { kind:(sc.type==='video'?'video':'image'), file:sc.file,
+                     focus:sc.focus, zoom:sc.zoom };
           })});
       });
       // 3) Play order from SHOWREEL_ORDER; anything unlisted keeps its place at the end.
@@ -214,12 +218,15 @@
     var viewer=new Marzipano.Viewer(panoEl,{controls:{mouseViewMode:'drag'}});
     try{ viewer.controls().disable(); }catch(e){}   // showreel is non-interactive
 
+    projects.forEach(function(p){ if(p.qr){ var q=new Image(); q.src=p.qr; } });   // warm QR cache
+
     // Flatten projects -> a single ordered list of scenes.
     var items=[];
     projects.forEach(function(p){
       p.scenes.forEach(function(sc){
         items.push({ projectId:p.id, projectName:p.name, qr:p.qr, kind:sc.kind, file:sc.file,
-                     cfg:sc.cfg, motion:sc.motion, settings:sc.settings });
+                     cfg:sc.cfg, motion:sc.motion, settings:sc.settings,
+                     focus:sc.focus, zoom:sc.zoom });
       });
     });
 
@@ -340,18 +347,25 @@
 
   // ----------------------- Project name + QR (top left) -----------------------
   // Missing QR file → hide the card rather than show a broken image.
-  qrImg.addEventListener('error', function(){ qrcardEl.hidden=true; });
+  qrImg.addEventListener('error', function(){ qrcardEl.classList.remove('show'); });
   var lastTitle=null;
+  // Name and QR card fade out together, swap while invisible, then fade back in together.
+  // A project without a QR simply leaves the card faded out.
+  var SWAP_MS=350;                   // matches the .35s opacity transitions in the CSS
   function setProjectName(title, qrSrc){
     if(title===lastTitle) return;   // scenes within one project keep the name/QR steady (no flicker)
     lastTitle=title;
     projectNameEl.style.opacity='0';
-    qrcardEl.style.opacity='0';
+    qrcardEl.classList.remove('show');
     setTimeout(function(){
+      if(lastTitle!==title) return;  // superseded by a quicker project change
       projectNameEl.textContent=title; projectNameEl.style.opacity='1';
-      if(qrSrc){ qrImg.src=qrSrc; qrcardEl.hidden=false; qrcardEl.style.opacity='1'; }
-      else { qrcardEl.hidden=true; }   // projects without a QR simply don't show the card
-    }, 250);
+      if(!qrSrc) return;
+      function showCard(){ if(lastTitle===title) qrcardEl.classList.add('show'); }
+      if(qrImg.getAttribute('src')===qrSrc && qrImg.complete){ showCard(); return; }
+      qrImg.onload=function(){ qrImg.onload=null; showCard(); };   // never fade in an empty card
+      qrImg.setAttribute('src', qrSrc);
+    }, SWAP_MS);
   }
 
   // ------------------------------- Playback -------------------------------
@@ -432,8 +446,15 @@
       other.style.zIndex=5;
       el.onerror=function(){ if(myToken===token) next(); };       // missing file -> move on
       if(el.getAttribute('src')!==it.file){ el.setAttribute('src', it.file); }
-      var zoomIn=(i%2===0);
+      // Direction alternates by position unless the image sets zoom:'in'|'out'.
+      var zoomIn = it.zoom ? (it.zoom==='in') : (i%2===0);
       var zFrom=zoomIn?1:ZIMG, zTo=zoomIn?ZIMG:1;
+      // `focus` is the point of interest, e.g. '50% 75%' for a building in the lower part
+      // of a sky-heavy render: the zoom heads towards it, and the cover-crop favours it.
+      // Always set (layers are reused), falling back to the centre.
+      var focus = it.focus || '50% 50%';
+      el.style.transformOrigin = focus;
+      el.style.objectPosition  = focus;
       el.style.transform='scale('+zFrom+')';
       presentOverlay(el, 6, myToken);
       announce(it, myToken);

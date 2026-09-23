@@ -5,12 +5,17 @@
    tours.js keep theirs).
 
    To add a project: drop files in stills/ or video/, add an entry below, then add its id
-   to SHOWREEL_ORDER. Scene `type` is 'image' or 'video'. */
+   to SHOWREEL_ORDER. Scene `type` is 'image' or 'video'.
+
+   Optional, per image:
+     focus: "X% Y%"   point of interest - the zoom heads there and the crop favours it.
+                      "50% 50%" is the centre (default); "50% 75%" = centred, 3/4 down.
+     zoom:  "in"|"out" force the direction (default alternates in/out along the reel). */
 window.SHOWREEL_PROJECTS = [
   { id:"blok-16", name:"Blok 16", scenes:[
-      { type:"image", file:"stills/blok-16-01.webp" },
-      { type:"image", file:"stills/blok-16-02.webp" },
-      { type:"image", file:"stills/blok-16-03.webp" },
+      { type:"image", file:"stills/blok-16-01.webp", focus:"50% 75%", zoom:"in" },
+      { type:"image", file:"stills/blok-16-02.webp", zoom:"out" },
+      { type:"image", file:"stills/blok-16-03.webp", zoom:"in" },
   ] },
   { id:"common-woods", name:"Common Woods", scenes:[
       { type:"image", file:"stills/common-woods-01.webp" },
@@ -51,10 +56,10 @@ window.SHOWREEL_ORDER = [
   "margriettoren",
   "strandeiland",
   "wittenborg",
+  "omval",
   "lincolnpark",
-  "blok-16",
   "common-woods",
+  "blok-16",
   "schiphol-c-pier",
   "zeist",
-  "omval",
 ];
