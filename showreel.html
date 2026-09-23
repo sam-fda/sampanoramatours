@@ -74,7 +74,7 @@
 
   /* Loop progress segments, bottom-center */
   .segs{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;gap:7px;opacity:1;transition:opacity var(--name-in) ease-in-out;}
-  body.closing-logo .segs, body.closing-logo .bar-chip{opacity:0;transition:opacity var(--fade) ease-in-out;}   /* fade out with the closing clip */
+  body.reel-ending .segs, body.reel-ending .bar-chip{opacity:0;transition:opacity var(--fade) ease-in-out;}   /* fade out with the closing clip (body class must not reuse an element class name) */
   .seg-hit{-webkit-appearance:none;appearance:none;background:none;border:0;margin:0;padding:12px 0;cursor:pointer;display:block;}
   .seg-hit:focus-visible{outline:2px solid #fff;outline-offset:2px;}
   .seg{display:block;width:26px;height:3px;border-radius:2px;background:rgba(255,255,255,.32);box-shadow:0 1px 3px rgba(0,0,0,.25);overflow:hidden;transition:background .15s ease,transform .15s ease;}
@@ -646,7 +646,7 @@
     function playClosingVideo(i, it, myToken){
       var v=closingVid, bc=document.body.classList;
       closingEl.classList.add('light');
-      bc.remove('closing','closing-logo'); bc.add('closing-light');     // dark progress bars on the white clip
+      bc.remove('closing','reel-ending'); bc.add('closing-light');     // dark progress bars on the white clip
       v.style.opacity='1'; closingLogo.style.opacity='0'; closingLogo.style.top='';
       var logoMs=Math.max(STILL_MS*it.logoSlides, FADE_MS*2);
       var revealed=false, ended=false, tailMs=0, last=0;
@@ -656,7 +656,7 @@
       }
       function finish(){
         if(ended || myToken!==token) return;
-        ended=true; bc.add('closing-logo');                          // name box + bars fade out now
+        ended=true; bc.add('reel-ending');                          // name box + bars fade out now
         if(segFills[i]) segFills[i].style.width='100%';
       }
       function fail(){ reveal(); finish(); }                         // no clip -> straight to the logo
@@ -699,8 +699,8 @@
       if(it.kind==='closing'){ (it.video ? playClosingVideo : playClosingScene)(i, it, myToken); return; }
       // Leaving the closing card: bring the logo box back as the new name fades in.
       var bc=document.body.classList;
-      if(bc.contains('closing') || bc.contains('closing-light') || bc.contains('closing-logo')){
-        setTimeout(function(){ if(myToken===token) bc.remove('closing','closing-light','closing-logo'); }, SWAP_MS);
+      if(bc.contains('closing') || bc.contains('closing-light') || bc.contains('reel-ending')){
+        setTimeout(function(){ if(myToken===token) bc.remove('closing','closing-light','reel-ending'); }, SWAP_MS);
       }
       if(it.kind==='video'){ playVideoScene(i, it, myToken); return; }
       if(it.kind==='image'){ playImageScene(i, it, myToken); return; }
