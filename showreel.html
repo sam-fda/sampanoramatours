@@ -236,6 +236,7 @@
         if(!p || !p.scenes || !p.scenes.length) return;
         var existing=projects.filter(function(q){ return q.id===p.id; })[0];
         if(existing){
+          if(p.name) existing.name=p.name;            // showreel name wins over the tour title
           var isSequence=p.scenes.some(function(sc){ return sc.type==='pano'; });
           if(isSequence){
             var own=existing.scenes;
