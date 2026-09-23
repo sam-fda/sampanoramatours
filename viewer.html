@@ -184,7 +184,11 @@
     else if(S.yawLimited) parts.push(L.pitch(-Math.PI/2,Math.PI/2));
     return Marzipano.util.compose.apply(null,parts);
   }
-  function startFov(S){ return deg(clamp(75,S.fovMin,S.fovMax)); }
+  // Opening zoom: 75° by default; a scene's front.fov overrides it ("max" = fully zoomed out, or degrees).
+  function startFov(S,fov){
+    var f = fov==='max' ? S.fovMax : fov==='min' ? S.fovMin : (typeof fov==='number' ? fov : 75);
+    return deg(clamp(f,S.fovMin,S.fovMax));
+  }
   function showLoading(on){ loadingEl.classList.toggle('show',on); }
 
   function buildScene(cfg){
@@ -197,10 +201,11 @@
         var geometry=new Marzipano.EquirectGeometry([{width:w}]);
         var source=Marzipano.ImageUrlSource.fromString(cfg.file);
         var st=sceneSettings(cfg);
-        var view=new Marzipano.RectilinearView({yaw:frontYaw,pitch:frontPitch,fov:startFov(st)}, makeLimiter(st,w,frontYaw));
+        var frontFov=cfg.front&&cfg.front.fov;
+        var view=new Marzipano.RectilinearView({yaw:frontYaw,pitch:frontPitch,fov:startFov(st,frontFov)}, makeLimiter(st,w,frontYaw));
         var marzScene=viewer.createScene({source:source,geometry:geometry,view:view,pinFirstLevel:true});
         scenes.push({id:cfg.id,name:cfg.name||cfg.id,marzScene:marzScene,view:view,thumbUrl:cfg.file,
-                     front:{yaw:frontYaw,pitch:frontPitch}, settings:st});
+                     front:{yaw:frontYaw,pitch:frontPitch,fov:frontFov}, settings:st});
         resolve();
       };
       img.onerror=function(){ resolve(); };
@@ -212,7 +217,7 @@
     if(i<0||i>=scenes.length)return; current=i;
     var s=scenes[i];
     // Reset to the scene's starting frame every time (don't resume where the guest left off).
-    s.view.setYaw(s.front.yaw); s.view.setPitch(s.front.pitch); s.view.setFov(startFov(s.settings));
+    s.view.setYaw(s.front.yaw); s.view.setPitch(s.front.pitch); s.view.setFov(startFov(s.settings,s.front.fov));
     s.marzScene.switchTo({transitionDuration:600});
     renderScenes();
   }

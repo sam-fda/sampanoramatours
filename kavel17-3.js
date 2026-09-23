@@ -17,7 +17,8 @@ window.TOUR = {
       "file": "panos/kavel173-panorama-01.webp",
       "front": {
         "yaw": 0.3,
-        "pitch": -0.2
+        "pitch": -0.2,
+        "fov": "max"
       },
       "settings": {
         "fovMin": 35,
