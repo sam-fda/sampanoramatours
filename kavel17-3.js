@@ -14,7 +14,7 @@ window.TOUR = {
     {
       "id": "kavel173-panorama-01",
       "name": "kavel173 panorama 01",
-      "file": "panos/kavel173-panorama-01.webp",
+      "file": "panos/kavel173-panorama-01.webp?v=2",
       "front": {
         "yaw": 0.3,
         "pitch": -0.2,
