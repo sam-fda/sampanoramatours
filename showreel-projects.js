@@ -36,9 +36,10 @@ window.SHOWREEL_PROJECTS = [
   { id:"e-buurt", name:"E-buurt", scenes:[
       { type:"image", file:"stills/e-buurt-01.webp" },
   ] },
+  // Edisonweg plays LAST, right before the closing clip (which is its video) - see SHOWREEL_CLOSING.
+  // Render: "Upscale A2 superzoom.jpg".
   { id:"edisonweg", name:"Edisonweg", scenes:[
       { type:"image", file:"stills/edisonweg-01.webp", focus:"50% 95%", zoom:"in" },
-      { type:"image", file:"stills/edisonweg-02.webp" },
   ] },
   { id:"lincolnpark", name:"Lincolnpark", scenes:[
       { type:"image", file:"stills/lincolnpark-01.webp" },
@@ -93,7 +94,6 @@ window.SHOWREEL_PROJECTS = [
 window.SHOWREEL_ORDER = [
   "e-buurt",
   "silo",
-  "edisonweg",
   "margriettoren",
   "strandeiland",
   "wittenborg",
@@ -107,16 +107,15 @@ window.SHOWREEL_ORDER = [
   "delft-veld-6-7",
 ];
 
-/* Closing card, played after the last project before the reel loops. No logo box, no QR.
-   VIDEO closer (current): the clip fades in over the last project and plays at its own speed;
-   the BLACK logo fades in at `logoAt` seconds into the clip, centred on `logoTop` % from the top
-   (the empty wall above the model); when the clip ends it fades out to white while the logo
-   glides to the centre, stays alone for `logoHold` s (doubled by the reel's SLOW factor), then
-   fades out and the first project fades in.
+/* Closing scene, played after the last project before the reel loops.
+   VIDEO closer (current): the clip is the last scene of `project` - that project always plays
+   right before it (wherever it is in SHOWREEL_ORDER), so its name box stays up through the clip.
+   When the clip ends it cross-fades to white with the centred black logo, while the name box and
+   progress bars fade out; the logo stays for `logoSlides` x one still's duration, then the first
+   project fades in over it.
    (Old image closer: set image:"stills/closing.webp" and drop `video` - white logo on black.) */
 window.SHOWREEL_CLOSING = {
+  project: "edisonweg",         // the clip is Edisonweg's (name box shows "Edisonweg")
   video: "video/closing.mp4",   // MVI_5342.MP4 with the first 3 s cut (38 s, 1440p)
-  logoAt: 16,                   // = 0:19 in the original clip
-  logoTop: 12.5,                // % from the top while the clip plays (50 = centre)
-  logoHold: 3,                  // x SLOW (2) = ~6 s of logo alone on white after the fade
+  logoSlides: 0.9,              // logo on white ~0.9 x a still's duration (~22 s at the default pace)
 };
