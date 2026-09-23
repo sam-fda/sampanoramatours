@@ -546,9 +546,7 @@
     function playImageScene(i, it, myToken){
       front=1-front;
       var el=stills[front], other=stills[1-front];
-      other.style.zIndex=5;
       el.onerror=function(){ if(myToken===token) next(); };       // missing file -> move on
-      if(el.getAttribute('src')!==it.file){ el.setAttribute('src', it.file); }
       // Direction alternates by position unless the image sets zoom:'in'|'out'.
       var zFrom, zTo;
       if(it.scale && it.scale.length===2){ zFrom=+it.scale[0]; zTo=+it.scale[1]; }   // explicit range
@@ -557,12 +555,26 @@
       // of a sky-heavy render: the zoom heads towards it, and the cover-crop favours it.
       // Always set (layers are reused), falling back to the centre.
       var focus = it.focus || '50% 50%';
-      el.style.transformOrigin = focus;
-      el.style.objectPosition  = focus;
-      el.style.transform='scale('+zFrom+')';
-      presentOverlay(el, 6, myToken);
-      announce(it, myToken);
-      timedLoop(i, myToken, STILL_MS, function(t){ el.style.transform='scale('+lerp(zFrom,zTo,t)+')'; });
+      var started=false;
+      function begin(){
+        if(started || myToken!==token) return;
+        started=true;
+        other.style.zIndex=5;
+        el.style.transformOrigin = focus;
+        el.style.objectPosition  = focus;
+        el.style.transform='scale('+zFrom+')';
+        presentOverlay(el, 6, myToken);
+        announce(it, myToken);
+        timedLoop(i, myToken, STILL_MS, function(t){ el.style.transform='scale('+lerp(zFrom,zTo,t)+')'; });
+      }
+      // The layer still holds the image it showed two scenes ago. Only fade it in once the NEW
+      // image is decoded - otherwise a jump (bar click) to a not-yet-loaded image flashes that
+      // stale picture for a moment. The current scene stays on screen meanwhile.
+      if(el.getAttribute('src')!==it.file){ el.setAttribute('src', it.file); }
+      if(typeof el.decode==='function'){
+        el.decode().then(begin, function(){ if(el.complete && el.naturalWidth) begin(); });   // error -> onerror moves on
+      } else if(el.complete && el.naturalWidth){ begin(); }
+      else { el.onload=function(){ el.onload=null; begin(); }; }
     }
 
     // --- rendered video: the clip's own length decides how long it stays up ---
@@ -610,6 +622,9 @@
       requestAnimationFrame(function loop(){
         if(myToken!==token || !alive) return;
         if(paused){ if(!v.paused) v.pause(); requestAnimationFrame(loop); return; }
+        // v.ended is set the moment the clip finishes, a beat BEFORE the 'ended' event - calling
+        // play() in that gap would restart the clip from its first frame, so finish instead.
+        if(v.ended){ go(); return; }
         if(v.paused && !done){ var r=v.play(); if(r&&r.catch) r.catch(function(){}); }
         var d=v.duration||0, c=v.currentTime||0;
         if(segFills[i]) segFills[i].style.width = (d?clamp(c/d,0,1):0)*100+'%';
@@ -677,6 +692,9 @@
         var dt=last ? now-last : 0; last=now;
         if(!ended){
           if(paused){ if(!v.paused) v.pause(); requestAnimationFrame(loop); return; }
+          // (v.ended flips before the 'ended' event fires; play() then would restart the clip
+          //  and flash its first frame under the fade to the logo.)
+          if(v.ended){ finish(); requestAnimationFrame(loop); return; }
           if(v.paused && revealed){ var r=v.play(); if(r&&r.catch) r.catch(function(){}); }
           var d=(v.duration && isFinite(v.duration)) ? v.duration : 0;
           if(segFills[i] && d) segFills[i].style.width=clamp((v.currentTime||0)/d,0,1)*100+'%';
