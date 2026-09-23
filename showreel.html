@@ -11,6 +11,7 @@
     --line:rgba(25,25,25,.14); --line-strong:rgba(25,25,25,.30);
     --muted:rgba(25,25,25,.55); --panel:rgba(255,255,255,.90);
     --radius:2px;
+    --name-in:1.5s; --name-out:.8s;   /* project name + QR fades; scaled by SLOW from the script */
     --font:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
   }
   *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
@@ -24,18 +25,25 @@
   /* Still images: two layers so one can cross-fade into the other while it slowly zooms */
   .reel-still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0d0d0d;z-index:5;opacity:0;transition:opacity .6s ease;pointer-events:none;will-change:transform,opacity;}
   .reel-still.show{opacity:1;}
+  /* Closing card: image over black, then the white logo; the image fades to black while the
+     logo stays, then the logo fades out. Opacities of the image/logo are driven by the script. */
+  .reel-closing{position:absolute;inset:0;background:#000;z-index:5;opacity:0;pointer-events:none;}
+  .reel-closing.show{opacity:1;}
+  .closing-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transform-origin:58% 48%;will-change:transform,opacity;}   /* zoom aims at the model */
+  .closing-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(54vw,1650px);height:auto;aspect-ratio:1280/200;color:#fff;opacity:0;display:block;}
 
   /* Persistent logo chip, top-left */
   .topbar{position:absolute;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;gap:14px;padding:20px 22px;pointer-events:none;}
-  .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:9px 14px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);}
+  .bar-chip{display:inline-flex;align-items:stretch;gap:12px;padding:9px 14px;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);opacity:1;transition:opacity var(--name-in) ease-in-out;}
+  body.closing .bar-chip{opacity:0;transition:opacity var(--name-out) ease-in-out;}   /* no logo box on the closing card */
   .logo-link{display:inline-flex;align-items:center;flex:none;pointer-events:auto;}
   .logo-link:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
   .logo{height:17px;width:auto;color:var(--ink);display:block;align-self:center;}
   .bar-div{width:1px;align-self:stretch;background:var(--line-strong);flex:none;}
   /* Project name: slow fade-in (1.5s, same as the image cross-fade), quicker fade-out (.8s).
      A CSS transition uses the timing of the state it is heading INTO, hence two rules. */
-  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;opacity:1;transition:opacity 1.5s ease-in-out;}
-  .proj-current.out{opacity:0;transition:opacity .8s ease-in-out;}
+  .proj-current{display:flex;align-items:center;font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);white-space:nowrap;line-height:1.1;opacity:1;transition:opacity var(--name-in) ease-in-out;}
+  .proj-current.out{opacity:0;transition:opacity var(--name-out) ease-in-out;}
 
   /* Fullscreen button, top-right */
   .top-full{margin-left:auto;pointer-events:auto;-webkit-appearance:none;appearance:none;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);transition:background .15s ease,border-color .15s ease,transform .05s ease;}
@@ -43,13 +51,14 @@
   .top-full:active{transform:translateY(1px);}
   .top-full:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
   .top-full svg{width:18px;height:18px;display:block;}
+  .top-full[hidden]{display:none;}   /* hidden while in fullscreen - Esc (or F) exits */
 
-  /* Per-project QR card, below the logo/name chip (top-left) */
+  /* Per-project QR card, bottom-left corner */
   /* Hidden = transparent + visibility:hidden (not display:none), so it can fade both ways.
      visibility flips only after the fade-out finishes, and immediately on fade-in.
      Same timing as the project name: fade-out .8s (must finish before the swap), fade-in 1.5s. */
-  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity .8s ease-in-out,visibility 0s linear .8s;}
-  .qrcard.show{opacity:1;visibility:visible;transition:opacity 1.5s ease-in-out,visibility 0s;}
+  .qrcard{position:absolute;left:22px;bottom:22px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity var(--name-out) ease-in-out,visibility 0s linear var(--name-out);}
+  .qrcard.show{opacity:1;visibility:visible;transition:opacity var(--name-in) ease-in-out,visibility 0s;}
   .qrcard img{width:100%;height:auto;display:block;}
   .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
 
@@ -83,6 +92,10 @@
 <div id="pano"></div>
 <img id="stillA" class="reel-still" alt="">
 <img id="stillB" class="reel-still" alt="">
+<div id="closing" class="reel-closing" aria-hidden="true">
+  <img id="closingImg" class="closing-img" alt="">
+  <svg id="closingLogo" class="closing-logo" viewBox="0 0 1280 200" role="img" aria-label="space&amp;matter"><use href="#sm-logo"/></svg>
+</div>
 
 <div class="topbar">
   <div class="bar-chip">
@@ -122,9 +135,14 @@
   // ---- Timing (overridable via URL: ?pan=9000&fade=1200&hold=600&zoom=8) ----
   var P=new URLSearchParams(location.search);
   function numParam(name,def){ var v=parseFloat(P.get(name)); return isFinite(v)&&v>=0 ? v : def; }
-  var PAN_MS  = numParam('pan', 18000);   // pan duration per scene
-  var HOLD_MS = numParam('hold', 0);      // still hold at the end of each pan (0 = flow straight into the fade)
-  var FADE_MS = numParam('fade', 1500);   // cross-fade between scenes
+  // Global pace. The reel runs in the background at events, so everything is SLOW x slower:
+  // scene lengths, cross-fades, name/QR fades and the frame-by-frame animation. Motion ranges
+  // (pan arc, zoom amount) stay the same, so every movement is SLOW x slower too.
+  // Rendered flythrough videos keep their own speed. ?slow=1 restores the original pace.
+  var SLOW    = numParam('slow', 2) || 1;
+  var PAN_MS  = numParam('pan', 18000)*SLOW;   // pan duration per scene
+  var HOLD_MS = numParam('hold', 0)*SLOW;      // still hold at the end of each pan (0 = flow straight into the fade)
+  var FADE_MS = numParam('fade', 1500)*SLOW;   // cross-fade between scenes
   var ZOOM    = numParam('zoom', 8);      // gentle push-in over the pan, in degrees of FOV
 
   // Motion per scene:
@@ -154,12 +172,14 @@
   };
   var MUTE = (P.get('mute')!=='0');       // muted by default so it always autoplays; ?mute=0 for sound
   var ZIMG = numParam('zimg', 1.18);      // still images: zoom between 1.0 and this scale
-  var STILL_MS = numParam('still', 12000);// still images stay this long (panoramas use PAN_MS)
+  var STILL_MS = numParam('still', 12000)*SLOW;   // still images stay this long (panoramas use PAN_MS)
 
   var DEF = { fovMin:30, fovMax:100, yawLimited:false, yawRange:180, pitchLimited:false, pitchUp:60, pitchDown:60 };
 
   var panoEl=document.getElementById('pano'),
       stillA=document.getElementById('stillA'), stillB=document.getElementById('stillB'),
+      closingEl=document.getElementById('closing'), closingImg=document.getElementById('closingImg'),
+      closingLogo=document.getElementById('closingLogo'),
       splashEl=document.getElementById('splash'), splashDots=document.getElementById('splashDots'),
       projectNameEl=document.getElementById('projectName'), fsBtn=document.getElementById('fsBtn'),
       qrcardEl=document.getElementById('qrcard'), qrImg=document.getElementById('qrImg'),
@@ -202,14 +222,33 @@
       });
     });
     return chain.then(function(){
-      // 2) Still/video projects from showreel-projects.js. These have no QR code.
+      // 2) Still/video projects from showreel-projects.js. These have no QR code - unless the
+      //    entry shares its id with a panorama tour. Then it keeps the tour's name and QR, and:
+      //     - if it lists { type:"pano", scene:"<scene id>" } entries, it is the tour's COMPLETE
+      //       sequence for the showreel (tour scenes not listed are left out of the reel only;
+      //       the QR tour itself is unchanged);
+      //     - otherwise its scenes are APPENDED after the tour's own scenes.
+      function mapScene(sc){
+        return { kind:(sc.type==='video'?'video':'image'), file:sc.file,
+                 focus:sc.focus, zoom:sc.zoom, scale:sc.scale, stepped:!!sc.stepped };
+      }
       (window.SHOWREEL_PROJECTS||[]).forEach(function(p){
         if(!p || !p.scenes || !p.scenes.length) return;
-        projects.push({ id:p.id, name:(p.name||p.id), qr:p.qr||null,
-          scenes:p.scenes.map(function(sc){
-            return { kind:(sc.type==='video'?'video':'image'), file:sc.file,
-                     focus:sc.focus, zoom:sc.zoom };
-          })});
+        var existing=projects.filter(function(q){ return q.id===p.id; })[0];
+        if(existing){
+          var isSequence=p.scenes.some(function(sc){ return sc.type==='pano'; });
+          if(isSequence){
+            var own=existing.scenes;
+            existing.scenes=p.scenes.map(function(sc){
+              if(sc.type!=='pano') return mapScene(sc);
+              return own.filter(function(x){ return x.cfg && x.cfg.id===sc.scene; })[0] || null;
+            }).filter(Boolean);
+          } else {
+            existing.scenes=existing.scenes.concat(p.scenes.map(mapScene));
+          }
+          return;
+        }
+        projects.push({ id:p.id, name:(p.name||p.id), qr:p.qr||null, scenes:p.scenes.map(mapScene) });
       });
       // 3) Play order from SHOWREEL_ORDER; anything unlisted keeps its place at the end.
       var byId={}; projects.forEach(function(p){ byId[p.id]=p; });
@@ -237,9 +276,15 @@
       p.scenes.forEach(function(sc){
         items.push({ projectId:p.id, projectName:p.name, qr:p.qr, kind:sc.kind, file:sc.file,
                      cfg:sc.cfg, motion:sc.motion, settings:sc.settings, panSpeed:sc.panSpeed,
-                     focus:sc.focus, zoom:sc.zoom });
+                     focus:sc.focus, zoom:sc.zoom, scale:sc.scale, stepped:sc.stepped });
       });
     });
+    // Closing card with the logo - always the final scene before the loop starts again.
+    var C=window.SHOWREEL_CLOSING;
+    if(C && C.image){
+      items.push({ projectId:'closing', projectName:'', qr:null, kind:'closing', file:C.image });
+      var pc=new Image(); pc.src=C.image;
+    }
 
     function yawArcLimiter(centerRad, halfRad){
       return function(p){
@@ -277,7 +322,7 @@
     // panorama fallback). Plain image/video projects need nothing here.
     function buildItem(it, idx){
       if(it.kind==='video') makeVideoEl(it);
-      if(it.kind==='image' || !it.cfg) return Promise.resolve(true);
+      if(it.kind==='image' || it.kind==='closing' || !it.cfg) return Promise.resolve(true);
       return new Promise(function(resolve){
         var img=new Image();
         img.onload=function(){
@@ -301,7 +346,8 @@
             // Slow yaw sweep across (an inset of) the allowed arc, alternating direction,
             // with a gentle push-in.
             var half = S.yawLimited ? deg(S.yawRange)/2*0.92 : deg(55);
-            if(it.panSpeed){ half=Math.min(half, deg(it.panSpeed*PAN_MS/1000)/2); }   // speed cap
+            // speed cap (deg/s at normal pace; divided by SLOW so the arc stays the same and only the speed drops)
+            if(it.panSpeed){ half=Math.min(half, deg(it.panSpeed/SLOW*PAN_MS/1000)/2); }
             var dir  = (idx%2===0)?1:-1;
             var fovStart = clamp(70, S.fovMin, S.fovMax);
             var fovEnd   = clamp(fovStart-ZOOM, S.fovMin, S.fovMax);   // gentle push-in
@@ -363,7 +409,10 @@
   var lastTitle=null;
   // Name and QR card fade out together, swap while invisible, then fade back in together.
   // A project without a QR simply leaves the card faded out.
-  var SWAP_MS=800;                   // = the .8s fade-out in the CSS; the swap happens once it's invisible
+  var NAME_IN_MS=1500*SLOW, NAME_OUT_MS=800*SLOW;
+  document.documentElement.style.setProperty('--name-in',  NAME_IN_MS+'ms');
+  document.documentElement.style.setProperty('--name-out', NAME_OUT_MS+'ms');
+  var SWAP_MS=NAME_OUT_MS;           // swap once the fade-out has finished
   function setProjectName(title, qrSrc){
     if(title===lastTitle) return;   // scenes within one project keep the name/QR steady (no flicker)
     lastTitle=title;
@@ -392,22 +441,30 @@
     var start=0, lastNow=0, paused=false, token=0;
     var stills=[stillA, stillB], front=0;
     var videos=list.filter(function(x){ return x.videoEl; }).map(function(x){ return x.videoEl; });
-    stills.concat(videos).forEach(function(el){ el.style.transition='opacity '+FADE_MS+'ms ease'; });
+    var overlays=stills.concat(videos).concat([closingEl]);   // everything that sits above the panorama
+    overlays.forEach(function(el){ el.style.transition='opacity '+FADE_MS+'ms ease'; });
     function pauseAllVideos(){ videos.forEach(function(v){ try{ v.pause(); }catch(e){} }); }
 
     function next(){ playScene((current+1)%N); }
     function overlayVisible(){
-      return stills.concat(videos).some(function(el){ return el.classList.contains('show'); });
+      return overlays.some(function(el){ return el.classList.contains('show'); });
     }
     // Hide every overlay except `keep`. Called once the incoming visual is fully opaque,
     // so the outgoing one never uncovers whatever sits beneath it.
     function hideOverlays(keep){
-      stills.concat(videos).forEach(function(el){
+      overlays.forEach(function(el){
         if(el!==keep){ el.classList.remove('show'); if(el.tagName==='VIDEO'){ try{ el.pause(); }catch(e){} } }
       });
     }
     function presentOverlay(el, z, myToken){
-      el.style.zIndex=z; el.classList.add('show');
+      // The incoming layer always goes ON TOP of whatever is showing, whatever its type, so it
+      // cross-fades over the outgoing one. (Fixed stacking put videos above stills, so after a
+      // video an image faded in underneath it and the video's last frame lingered on top.)
+      // Layers stay between 5 and 11 - below the chrome (name bar, QR, progress bars).
+      overlays.forEach(function(o){
+        if(o!==el) o.style.zIndex = o.classList.contains('show') ? 10 : 5;
+      });
+      el.style.zIndex=11; el.classList.add('show');
       setTimeout(function(){ if(myToken===token) hideOverlays(el); }, FADE_MS);
     }
     // The name/QR must not run ahead of the picture. Scenes reveal at different moments
@@ -458,8 +515,9 @@
       el.onerror=function(){ if(myToken===token) next(); };       // missing file -> move on
       if(el.getAttribute('src')!==it.file){ el.setAttribute('src', it.file); }
       // Direction alternates by position unless the image sets zoom:'in'|'out'.
-      var zoomIn = it.zoom ? (it.zoom==='in') : (i%2===0);
-      var zFrom=zoomIn?1:ZIMG, zTo=zoomIn?ZIMG:1;
+      var zFrom, zTo;
+      if(it.scale && it.scale.length===2){ zFrom=+it.scale[0]; zTo=+it.scale[1]; }   // explicit range
+      else { var zoomIn = it.zoom ? (it.zoom==='in') : (i%2===0); zFrom=zoomIn?1:ZIMG; zTo=zoomIn?ZIMG:1; }
       // `focus` is the point of interest, e.g. '50% 75%' for a building in the lower part
       // of a sky-heavy render: the zoom heads towards it, and the cover-crop favours it.
       // Always set (layers are reused), falling back to the centre.
@@ -486,6 +544,9 @@
       }
       v.onended=go; v.onerror=fallback;
       v.muted=MUTE;
+      // A stepped (frame-by-frame) animation slows down with the rest of the reel; holding each
+      // frame longer loses nothing. Rendered flythroughs keep their own speed.
+      v.defaultPlaybackRate = v.playbackRate = (it.stepped ? 1/SLOW : 1);
       try{ v.currentTime=0; }catch(e){}
       var pp=v.play();
       // Only real failures fall back; an AbortError (play interrupted by a seek/skip) is harmless -
@@ -521,6 +582,30 @@
       });
     }
 
+    // --- closing card: image fades in, logo fades in, image fades to black (logo stays),
+    //     logo fades out, then the loop starts again from black. All timings follow SLOW.
+    function smooth(x){ x=clamp(x,0,1); return x*x*(3-2*x); }
+    function playClosingScene(i, it, myToken){
+      if(closingImg.getAttribute('src')!==it.file) closingImg.setAttribute('src', it.file);
+      closingImg.style.opacity='1'; closingLogo.style.opacity='0'; closingImg.style.transform='scale(1)';
+      document.body.classList.add('closing');            // hide the logo box top-left
+      presentOverlay(closingEl, 11, myToken);            // image fades in over the last scene
+      announce(it, myToken);                             // (no name, no QR)
+      var LOGO_FADE=1500*SLOW;
+      var logoIn  = FADE_MS + 1000*SLOW;                 // logo starts once the image is in
+      var imgOut  = logoIn + LOGO_FADE + 1500*SLOW;      // image + logo together, briefly
+      var logoOut = imgOut + FADE_MS + 4000*SLOW;        // white logo alone on black, longer
+      var end     = logoOut + LOGO_FADE + 500*SLOW;      // a short beat of black
+      var CLOSE_ZOOM = 1.08;                             // image only (not the logo): slow constant zoom-in
+      var imgGone = imgOut + FADE_MS;                    // ...for as long as the image is on screen
+      timedLoop(i, myToken, end, function(t){
+        var ms=t*end;
+        closingImg.style.opacity  = String(1 - smooth((ms-imgOut)/FADE_MS));
+        closingImg.style.transform = 'scale('+(1+(CLOSE_ZOOM-1)*clamp(ms/imgGone,0,1))+')';
+        closingLogo.style.opacity = String(smooth((ms-logoIn)/LOGO_FADE) * (1 - smooth((ms-logoOut)/LOGO_FADE)));
+      });
+    }
+
     // Warm the next scene so it is ready the moment it is needed.
     function preloadNext(i){
       var nx=list[(i+1)%N];
@@ -532,6 +617,11 @@
       var it=list[i];
       setSegFills(i);
       preloadNext(i);
+      if(it.kind==='closing'){ playClosingScene(i, it, myToken); return; }
+      // Leaving the closing card: bring the logo box back as the new name fades in.
+      if(document.body.classList.contains('closing')){
+        setTimeout(function(){ if(myToken===token) document.body.classList.remove('closing'); }, SWAP_MS);
+      }
       if(it.kind==='video'){ playVideoScene(i, it, myToken); return; }
       if(it.kind==='image'){ playImageScene(i, it, myToken); return; }
       // Panorama: if an overlay is covering the screen, put the panorama in place instantly
@@ -560,8 +650,20 @@
   // ------------------------------- Kiosk niceties -------------------------------
   var ENTER_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
   var EXIT_ICON ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
-  function updateFsIcon(){ fsBtn.innerHTML = document.fullscreenElement ? EXIT_ICON : ENTER_ICON; }
+  // In fullscreen the button isn't needed, so it hides; Esc (or the F key) exits.
+  // F11 / kiosk-mode fullscreen doesn't set document.fullscreenElement, so also treat a
+  // window that fills the whole screen as fullscreen.
+  function isFullscreen(){
+    if(document.fullscreenElement) return true;
+    return Math.abs(window.innerWidth-screen.width)<=1 && Math.abs(window.innerHeight-screen.height)<=1;
+  }
+  function updateFsIcon(){
+    var fs=isFullscreen();
+    fsBtn.innerHTML = fs ? EXIT_ICON : ENTER_ICON;
+    fsBtn.hidden = fs;
+  }
   updateFsIcon();
+  window.addEventListener('resize', updateFsIcon);
   function toggleFullscreen(){
     try{
       var el=document.documentElement, p;

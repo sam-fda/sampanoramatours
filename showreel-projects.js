@@ -10,22 +10,35 @@
    Optional, per image:
      focus: "X% Y%"   point of interest - the zoom heads there and the crop favours it.
                       "50% 50%" is the centre (default); "50% 75%" = centred, 3/4 down.
-     zoom:  "in"|"out" force the direction (default alternates in/out along the reel). */
+     zoom:  "in"|"out" force the direction (default alternates in/out along the reel).
+     scale: [from, to] exact zoom range instead, e.g. [1.30, 1.48] starts already zoomed in.
+   Optional, per video:
+     stepped: true     a frame-by-frame animation - it slows down with the rest of the reel.
+
+   An entry whose id matches a panorama tour (e.g. "margriettoren") is not a new project; it
+   keeps the tour's name and QR code, and either:
+     - adds its scenes to the END of that tour, or
+     - if it contains { type:"pano", scene:"<scene id>" } entries, sets the tour's complete
+       sequence in the showreel (panoramas not listed are left out of the reel only - the
+       QR panorama tour itself is unchanged).
+
+   SHOWREEL_CLOSING (bottom of this file) is the closing card that ends every loop. */
 window.SHOWREEL_PROJECTS = [
   { id:"blok-16", name:"Blok 16", scenes:[
       { type:"image", file:"stills/blok-16-01.webp", focus:"50% 90%", zoom:"in" },
-      { type:"image", file:"stills/blok-16-02.webp", zoom:"out" },
+      { type:"image", file:"stills/blok-16-model.webp", zoom:"out" },
       { type:"image", file:"stills/blok-16-03.webp", zoom:"in" },
   ] },
   { id:"common-woods", name:"Common Woods", scenes:[
       { type:"image", file:"stills/common-woods-01.webp" },
-      { type:"image", file:"stills/common-woods-02.webp" },
+      { type:"image", file:"stills/common-woods-02.webp", focus:"50% 95%" },
   ] },
   { id:"e-buurt", name:"E-buurt", scenes:[
       { type:"image", file:"stills/e-buurt-01.webp" },
   ] },
   { id:"edisonweg", name:"Edisonweg", scenes:[
       { type:"image", file:"stills/edisonweg-01.webp", focus:"50% 95%", zoom:"in" },
+      { type:"image", file:"stills/edisonweg-02.webp" },
   ] },
   { id:"lincolnpark", name:"Lincolnpark", scenes:[
       { type:"image", file:"stills/lincolnpark-01.webp" },
@@ -40,7 +53,25 @@ window.SHOWREEL_PROJECTS = [
       { type:"image", file:"stills/strandeiland-02.webp", zoom:"in" },
   ] },
   { id:"wittenborg", name:"Wittenborg", scenes:[
-      { type:"image", file:"stills/wittenborg-01.webp" },
+      // Starts already zoomed in so the Gemini mark (bottom-right) is never on screen;
+      // it stays off-screen for any zoom of 1.29 or more with this focus.
+      { type:"image", file:"stills/wittenborg-01.webp", focus:"45% 60%", scale:[1.30, 1.48] },
+  ] },
+  // Added to the HBW75 (margriettoren) panorama tour: plays right after its rendered video.
+  // High-res rebuild of Margriet-360.gif - same 16 turntable frames, same order and timing.
+  { id:"margriettoren", scenes:[
+      { type:"video", file:"video/margriettoren-360.mp4", stepped:true },
+  ] },
+  // Slotlaan, Zeist panorama tour - showreel sequence: the Slotlaan model photo replaces the
+  // second panorama (zeist-panorama-01). The QR tour still has all three panoramas.
+  { id:"zeist", scenes:[
+      { type:"pano",  scene:"zeist-panorama-03" },
+      { type:"image", file:"stills/zeist-slotlaan-01.webp" },
+      { type:"pano",  scene:"zeist-panorama-02" },
+  ] },
+  { id:"delft-veld-6-7", name:"Delft veld 6.7", scenes:[
+      { type:"image", file:"stills/delft-veld-6-7-01.webp" },
+      { type:"video", file:"video/delft-veld-6-7.mp4" },
   ] },
   { id:"silo", name:"SILO", scenes:[
       { type:"video", file:"video/silo.mp4" },
@@ -62,4 +93,12 @@ window.SHOWREEL_ORDER = [
   "blok-16",
   "schiphol-c-pier",
   "zeist",
+  "delft-veld-6-7",
 ];
+
+/* Closing card, played after the last project before the reel loops. No logo box, no QR:
+   the image fades in, then the white logo; the image fades to black while the logo stays;
+   then the logo fades out and the first project fades in. */
+window.SHOWREEL_CLOSING = {
+  image: "stills/closing.webp",   // cropped to 16:9 around the model (no sign, fruit or people)
+};
