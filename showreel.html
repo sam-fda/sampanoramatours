@@ -67,7 +67,7 @@
   /* Hidden = transparent + visibility:hidden (not display:none), so it can fade both ways.
      visibility flips only after the fade-out finishes, and immediately on fade-in.
      Same timing as the project name: fade-out .8s (must finish before the swap), fade-in 1.5s. */
-  .qrcard{position:absolute;left:22px;bottom:22px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity var(--name-out) ease-in-out,visibility 0s linear var(--name-out);}
+  .qrcard{position:absolute;left:22px;top:70px;z-index:35;width:168px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.12);opacity:0;visibility:hidden;transition:opacity var(--name-out) ease-in-out,visibility 0s linear var(--name-out);}
   .qrcard.show{opacity:1;visibility:visible;transition:opacity var(--name-in) ease-in-out,visibility 0s;}
   .qrcard img{width:100%;height:auto;display:block;}
   .qr-label{margin-top:8px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;}
